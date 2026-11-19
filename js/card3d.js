@@ -74,7 +74,7 @@
         g.beginPath(); g.moveTo(512, 512); g.arc(512, 512, 520, i * PI / 15, (i + 1) * PI / 15); g.closePath();
         g.fillStyle = css(i % 2 ? st.hi : st.rim); g.fill();
       }
-      g.beginPath(); g.arc(512, 512, 300, 0, 2 * PI); g.fillStyle = css('--card-face'); g.fill();   // white medallion
+      g.beginPath(); g.arc(512, 512, 300, 0, 2 * PI); g.fillStyle = css(st.deep); g.fill();   // the card's deep colour: the logo pops (user)
       g.lineWidth = 22; g.strokeStyle = css(st.deep); g.stroke();
       drawLogo2(g, 512, 512, 440);
     };
