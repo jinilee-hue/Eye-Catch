@@ -178,8 +178,19 @@
     const inner = new THREE.Mesh(new THREE.CylinderGeometry(0.955, 0.955, H - 0.03, 160, 1, true),
       new THREE.MeshStandardMaterial({ map: tex(ic), roughness: 0.4, metalness: 0, side: THREE.BackSide }));
     inner.position.y = (H - 0.03) / 2; body.add(inner);
-    const stack = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, H * 0.74, 96), new THREE.MeshStandardMaterial({ color: css('--card-stack'), roughness: 0.7 }));
+    // the cards inside, as a real stack (user: "카드케이스 좀더 자연스럽게"): the side shows the cards' edges in layers —
+    // sky and pink rims by turns with a thin shaded seam between cards — and the top card a little turned
+    const NS = 16, stc = canvas(8, 512), stg = stc.getContext('2d'), seam = 512 / NS;
+    for (let i = 0; i < NS; i++) {
+      stg.fillStyle = css(i % 2 ? '--rim-pink' : '--rim-sky'); stg.fillRect(0, i * seam, 8, seam);
+      stg.fillStyle = css('--rim-sky-hi'); stg.globalAlpha = 0.55; stg.fillRect(0, i * seam, 8, seam * 0.22); stg.globalAlpha = 1;   // the lit top of each rim
+      stg.fillStyle = css('--tin-in-lo'); stg.fillRect(0, (i + 1) * seam - seam * 0.16, 8, seam * 0.16);                       // the seam under it
+    }
+    const stexture = tex(stc); stexture.wrapS = THREE.RepeatWrapping;
+    const stack = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, H * 0.74, 120, 1, true), new THREE.MeshStandardMaterial({ map: stexture, roughness: 0.6 }));
     stack.position.y = H * 0.39; body.add(stack);
+    const stackTop = new THREE.Mesh(new THREE.CircleGeometry(0.9, 120), new THREE.MeshStandardMaterial({ color: css('--card-face'), roughness: 0.6 }));
+    stackTop.rotation.x = -PI / 2; stackTop.position.y = H * 0.76; body.add(stackTop);
     const top = Card3D.make(Cards.makeDeck(1).cards[0], { style: 'plain', float: false });
     S.scene.remove(top.root); body.add(top.root);
     top.root.scale.setScalar(0.88); top.root.rotation.set(-PI / 2 + 0.1, 0, 0.35); top.root.position.set(0, H * 0.78 + 0.05, -0.02);
