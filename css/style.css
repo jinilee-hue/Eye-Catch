@@ -13,10 +13,10 @@
   --p1-deep: #2f76d4;
   --p1-ink: #1d4f96;
   --p1-glow: rgba(79, 159, 240, 0.65);
-  --p2: #f7774f;
-  --p2-deep: #e2482f;
-  --p2-ink: #9a2a17;
-  --p2-glow: rgba(247, 119, 79, 0.65);
+  --p2: #ff7fb4;            /* Player 2 = pink, like the pink card (user) */
+  --p2-deep: #e8508f;
+  --p2-ink: #a6285d;
+  --p2-glow: rgba(255, 127, 180, 0.65);
   --rim-sky: #84d2f2;
   --rim-sky-hi: #d6f4ff;
   --rim-sky-deep: #3d9bcf;
