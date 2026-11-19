@@ -435,6 +435,7 @@
     G.piles[p].push(card);
     const q = pileSpot(p, G.piles[p].length - 1);
     S.sfx('whoosh');
+    card.restyle(p ? 'p2' : 'p1', 900);              // the winner's colour on the way to the pile
     await card.toPile(q.x, q.y, q.px, q.rz, q.z, 900, p ? 1 : -1);
     S.sfx('card');
     FX.sparkles(q.x, q.y, 10, 160);

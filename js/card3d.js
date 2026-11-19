@@ -50,6 +50,9 @@
     // the right card: pink, so it never matches the yellow deck between the cards (user: "가운데 뒷면도 노란색이라..")
     pink: { rim: '--rim-pink', hi: '--rim-pink-hi', deep: '--rim-pink-deep', halo: '--halo-pink' },
     plain: { rim: '--card', hi: '--card', deep: '--card-edge', halo: '' },
+    // a won card on its pile takes the winner's colour (user: "쌓이는 카드 컬러가 … 획득한 색의 칼라")
+    p1: { rim: '--p1', hi: '--p1', deep: '--p1-deep', halo: '' },
+    p2: { rim: '--p2', hi: '--p2', deep: '--p2-deep', halo: '' },
   };
   const backTex = {};
   // the two-line logo (EYE over CATCH, level): the card back's centre and the tin's lid
@@ -296,7 +299,7 @@
     card.restyle = (style, ms = 700) => {
       const to = new THREE.Color(css(STYLE[style].rim)), from = rimMat.color.clone();
       card.style = style;
-      if (card.halo) { card.halo.material.map = haloTexture(style); card.halo.material.needsUpdate = true; }
+      if (card.halo && STYLE[style].halo) { card.halo.material.map = haloTexture(style); card.halo.material.needsUpdate = true; }
       return card.tween(ms, u => rimMat.color.copy(from).lerp(to, u), t => t);
     };
     /** turn the face toward the middle of the table (radians about y; + = toward the right) */
