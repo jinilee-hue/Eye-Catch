@@ -26,15 +26,15 @@
   }))).then(() => (document.fonts ? document.fonts.load('700 48px "Baloo 2"') : null)).catch(() => null);
 
   // ── shared geometry: radius 1, axis along z, front face at +T/2 ────────────────────────────────────
-  const T = 0.085, RIN = 0.885, LIP = 0.022;
+  const T = 0.085, RIN = 0.885;
   const geo = (() => {
     const p = [], h = T / 2;
     const arc = (cx, cy, r, a0, a1, n) => { for (let i = 0; i <= n; i++) { const a = a0 + (a1 - a0) * i / n; p.push(new THREE.Vector2(cx + r * cos(a), cy + r * sin(a))); } };
     p.push(new THREE.Vector2(RIN - 0.004, -h));                 // inner back edge of the rim
     arc(1 - 0.045, -h + 0.0, 0.045, -PI / 2, 0, 8);              // round back corner
-    arc(1 - 0.045, h + LIP - 0.045, 0.045, 0, PI / 2, 8);       // round front corner (the rim stands LIP proud)
-    arc(RIN + 0.02, h + LIP - 0.02, 0.02, PI / 2, PI, 6);        // into the face
-    p.push(new THREE.Vector2(RIN - 0.004, h));
+    arc(1 - 0.045, h - 0.045, 0.045, 0, PI / 2, 8);             // round front corner, level with the face
+    p.push(new THREE.Vector2(RIN - 0.004, h));                   // flat to the face: no lip, no groove (user: "파인거 처럼
+                                                                  // 안에 그림자 주지말고") — the face is not sunk in
     const rim = new THREE.LatheGeometry(p, 160);
     rim.rotateX(PI / 2);                                          // lathe axis y -> z (front = +z)
     rim.computeVertexNormals();
@@ -74,7 +74,7 @@
         g.beginPath(); g.moveTo(512, 512); g.arc(512, 512, 520, i * PI / 15, (i + 1) * PI / 15); g.closePath();
         g.fillStyle = css(i % 2 ? st.hi : st.rim); g.fill();
       }
-      g.beginPath(); g.arc(512, 512, 300, 0, 2 * PI); g.fillStyle = css('--cream'); g.fill();
+      g.beginPath(); g.arc(512, 512, 300, 0, 2 * PI); g.fillStyle = css('--card-face'); g.fill();   // white medallion
       g.lineWidth = 22; g.strokeStyle = css(st.deep); g.stroke();
       drawLogo2(g, 512, 512, 440);
     };
@@ -135,9 +135,7 @@
     }
     card.draw = function () {
       ctx.clearRect(0, 0, TEX, TEX);
-      const gr = ctx.createRadialGradient(FR, FR * 0.9, FR * 0.2, FR, FR, FR);
-      gr.addColorStop(0, css('--card')); gr.addColorStop(0.86, css('--card')); gr.addColorStop(1, css('--card-edge'));
-      ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(FR, FR, FR, 0, 2 * PI); ctx.fill();
+      ctx.fillStyle = css('--card-face'); ctx.beginPath(); ctx.arc(FR, FR, FR, 0, 2 * PI); ctx.fill();   // flat white
       // two passes: every yellow tile first, then pictures and words on top — a tile never covers a neighbour's word
       // the matched picture: a yellow tile behind the big picture, no word (user: "선택됐을때가 수정하기 전 버전이
       // 낫다는거야" — the tile-with-word try was reverted). Tiles first, pictures on top.
@@ -179,9 +177,7 @@
         if (im && im.naturalWidth) {
           const ar = im.naturalWidth / im.naturalHeight;
           const w = ar >= 1 ? box : box * ar, h = ar >= 1 ? box / ar : box;
-          ctx.shadowColor = 'rgba(80, 50, 30, 0.18)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 5;
           ctx.drawImage(im, -w / 2, -h / 2, w, h);
-          ctx.shadowColor = 'transparent';
         }
         ctx.restore();
       }
@@ -192,9 +188,9 @@
 
     // meshes
     const rimMat = new THREE.MeshStandardMaterial({ color: css(st.rim), roughness: 0.3, metalness: 0.05, envMapIntensity: 1.1, side: THREE.DoubleSide });
-    const faceMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.62, metalness: 0, emissive: '#ffffff', emissiveIntensity: 0.12, emissiveMap: tex });
-    // every card has the deck's back (they all come out of the same deck), whatever its rim
-    const backMat = new THREE.MeshStandardMaterial({ map: backTexture('gold'), roughness: 0.45 });
+    const faceMat = new THREE.MeshBasicMaterial({ map: tex, toneMapped: false });   // true white, no yellow cast (user)
+    // the back in the card's own colour: the deck is sky and pink cards stacked by turns, no yellow (user)
+    const backMat = new THREE.MeshStandardMaterial({ map: backTexture(style === 'plain' ? 'sky' : style), roughness: 0.45 });
     const root = new THREE.Group();              // placed on the stage
     const mover = new THREE.Group(); root.add(mover);      // tweens (spin in, slide, fly)
     const tilt = new THREE.Group(); mover.add(tilt);       // turned in toward the middle (card.yawTo)
@@ -342,10 +338,14 @@
   function setDeck(n, sx = 1200, sy = 930, px = 300) {
     if (!deck) {
       deck = new THREE.Group();
-      const backMat = new THREE.MeshStandardMaterial({ map: backTexture('gold'), roughness: 0.45 });
-      const rimMat = new THREE.MeshStandardMaterial({ color: css('--rim-gold'), roughness: 0.3, envMapIntensity: 1.1, side: THREE.DoubleSide });
+      // sky and pink cards stacked by turns (user: "노란색말고 파란색과 핑크색 두개가 번갈아가면서 쌓여있으면")
+      const mats = ['sky', 'pink'].map(st => ({
+        back: new THREE.MeshStandardMaterial({ map: backTexture(st), roughness: 0.45 }),
+        rim: new THREE.MeshStandardMaterial({ color: css(STYLE[st].rim), roughness: 0.3, envMapIntensity: 1.1, side: THREE.DoubleSide }),
+      }));
       deck.coins = [];
       for (let i = 0; i < 12; i++) {
+        const { back: backMat, rim: rimMat } = mats[i % 2];
         const g = new THREE.Group();
         g.add(new THREE.Mesh(geo.rim, rimMat), new THREE.Mesh(geo.face, backMat));
         g.position.set(0, -i * 0.045, -i * 0.1);
@@ -371,11 +371,11 @@
       const rc = document.createElement('canvas'); rc.width = rc.height = 512;
       const g = rc.getContext('2d'), R = 256;
       const rg = g.createRadialGradient(R, R, 10, R, R, R);
-      rg.addColorStop(0, css('--ray-core')); rg.addColorStop(0.25, css('--ray')); rg.addColorStop(1, 'rgba(255, 220, 120, 0)');
+      rg.addColorStop(0, css('--amb-ray-core')); rg.addColorStop(0.25, css('--amb-ray')); rg.addColorStop(1, 'rgba(255, 255, 255, 0)');
       g.fillStyle = rg;
       for (let i = 0; i < 24; i++) { const a = i / 24 * 2 * PI; g.beginPath(); g.moveTo(R, R); g.arc(R, R, R, a, a + PI / 34); g.closePath(); g.fill(); }
       const cg = g.createRadialGradient(R, R, 0, R, R, R * 0.45);
-      cg.addColorStop(0, css('--ray-core')); cg.addColorStop(1, 'rgba(255, 240, 200, 0)');
+      cg.addColorStop(0, css('--amb-ray-core')); cg.addColorStop(1, 'rgba(255, 255, 255, 0)');
       g.fillStyle = cg; g.fillRect(0, 0, 512, 512);
       const rt = new THREE.CanvasTexture(rc); rt.colorSpace = THREE.SRGBColorSpace;
       const rays = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: rt, transparent: true, depthWrite: false, opacity: 0.55 }));
