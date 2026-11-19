@@ -205,10 +205,10 @@ img { -webkit-user-drag: none; user-select: none; }
 
 /* the game screen's logo: EYE over CATCH, centred, letters clear of each other.
    saturation is baked into logo-game.webp */
-.game-logo { position: absolute; left: 50%; top: calc(64px - var(--ey)); width: 340px; transform: translateX(-50%); pointer-events: none; filter: drop-shadow(0 8px 10px var(--cream-shadow)); }
+.game-logo { position: absolute; left: 50%; top: calc(30px - var(--ey)); width: 520px;   /* bigger (user) */ transform: translateX(-50%); pointer-events: none; filter: drop-shadow(0 8px 10px var(--cream-shadow)); }
 
 /* the word, big, after a match: under the small logo, above the cards (the tutor stands at the bottom) */
-.wordpop { position: absolute; left: 50%; top: calc(320px - var(--ey)); transform: translateX(-50%); padding: 6px 70px 0; height: 150px; border-radius: 75px; background: var(--cream); border: 10px solid var(--cream-2);
+.wordpop { position: absolute; left: 50%; top: 825px;   /* over the deck (it dips out meanwhile): the bigger logo took the top */ transform: translateX(-50%); padding: 6px 70px 0; height: 150px; border-radius: 75px; background: var(--cream); border: 10px solid var(--cream-2);
   box-shadow: 0 0 0 6px var(--cream-edge), 0 14px 20px var(--cream-shadow); z-index: 3; font-size: 130px; font-weight: 800; color: var(--ink); line-height: 132px; letter-spacing: 4px; opacity: 0; pointer-events: none; white-space: nowrap; }
 .wordpop b { color: var(--pink); }
 .wordpop.show { animation: popIn .55s cubic-bezier(.2, 1.6, .4, 1) both; }

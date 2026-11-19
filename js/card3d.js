@@ -380,6 +380,8 @@
     deck.coins.forEach((c, i) => { c.visible = i < n; });
   }
   function hideDeck() { if (deck) deck.visible = false; }
+  /** the word card pops up where the deck is: the deck steps out of the way meanwhile */
+  function deckPeek(on) { if (deck && deck.coins.some(c => c.visible)) deck.visible = on; }
 
   // ── ambient light on the game table (the reference video): a slow golden ray burst behind the deck and twinkling
   //    sparkles drifting up round the cards. Card3D.ambient(true|false), Card3D.burst() on a match.
@@ -441,5 +443,5 @@
   /** a match: the rays flare up and the sparkles brighten for a moment */
   function burst() { if (amb) amb.boost = 1; }
 
-  window.Card3D = { make, ambient, burst, pick, ready, setDeck, hideDeck, drawLogo2, logoReady, all: cards };
+  window.Card3D = { make, ambient, burst, deckPeek, pick, ready, setDeck, hideDeck, drawLogo2, logoReady, all: cards };
 })();

@@ -365,8 +365,9 @@
     const el = $('#wordPop');
     el.innerHTML = `<b>${w[0]}</b>${w.slice(1)}`;
     el.classList.remove('hide'); void el.offsetWidth; el.classList.add('show');
+    Card3D.deckPeek(false);
   }
-  function hideWord() { const el = $('#wordPop'); if (el.classList.contains('show')) { el.classList.remove('show'); el.classList.add('hide'); } }
+  function hideWord() { const el = $('#wordPop'); Card3D.deckPeek(true); if (el.classList.contains('show')) { el.classList.remove('show'); el.classList.add('hide'); } }
 
   async function win(p, tok) {
     G.phase = 'reveal';
@@ -374,7 +375,7 @@
     hitCards([G.left, G.right], w);
     mon.cheer(); mon.lookAt(null); Card3D.burst();
     FX.ribbon(...SLOT.L, 520); setTimeout(() => FX.ribbon(...SLOT.R, 520), 160);
-    FX.rays(1200, 395 - G.ey, 900);                // behind the word, under the logo
+    FX.rays(1200, 900, 900);                       // behind the word, over the deck
     showWord(w);
     await S.chant(w); if (!alive(tok)) return;
     await S.say(['t:great1', 't:great2', 't:great3'][Math.floor(Math.random() * 3)]); if (!alive(tok)) return;
