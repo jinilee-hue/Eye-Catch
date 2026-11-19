@@ -1,0 +1,47 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>stt check</title></head>
+<body><pre id="out">loading…</pre>
+<script>window.Sound = { talking: 0 };</script>
+<script src="../js/words.js"></script>
+<script src="../js/voice.js"></script>
+<script src="../js/mic.js"></script>
+<script src="../js/stt.js"></script>
+<script>
+// Reads the game's own word clips (assets/voice) through the game's recogniser path (Mic.prepare -> STT.judge).
+// Each clip x each expected word: the diagonal must be 'ok', everything else must NOT be 'ok'.
+(async () => {
+  const out = document.getElementById('out');
+  // the page lives in dev/: the worker resolves stt/ from the page URL, so point it at the game root
+  history.replaceState(null, '', '../index.html?stt-check');
+  STT.preload();
+  const ok = await STT.whenReady(60000);
+  const words = EC_WORDS.words.map(w => w.w);
+  const ac = new AudioContext();
+  const res = { ready: ok, rows: [], neg: [] };
+  const load = async (key) => {
+    const c = EC_VOICE.clips[key];
+    const buf = await ac.decodeAudioData(await (await fetch('assets/voice/' + c[0])).arrayBuffer());
+    const ch = buf.getChannelData(0).slice(Math.floor(c[1] * buf.sampleRate), Math.floor((c[1] + c[3]) * buf.sampleRate));
+    return Mic.prepare(ch, buf.sampleRate);
+  };
+  for (const x of words) {
+    const pcm = await load('w:' + x);
+    const row = { said: x, v: {} };
+    for (const t of words) {
+      row.v[t] = await STT.judge(pcm, t, words.filter(w => w !== t));
+      if (t === x) row.heard = STT.last && STT.last.text;
+    }
+    res.rows.push(row);
+    out.textContent = JSON.stringify(res, null, 1);
+  }
+  // not a word: the tutor's own lines (Korean + English) against every word
+  for (const key of ['k:hello', 'k:rule1', 't:rule2', 't:great3', 's:m']) {
+    const pcm = await load(key);
+    const pass = [];
+    for (const t of words) if ((await STT.judge(pcm, t, words.filter(w => w !== t))) === 'ok') pass.push(t);
+    res.neg.push({ key, pass, heard: STT.last && STT.last.text });
+  }
+  out.textContent = JSON.stringify(res, null, 1);
+  window.__res = res;
+})();
+</script></body></html>

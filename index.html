@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Eye Catch</title>
+<link rel="stylesheet" href="css/font.css">
+<link rel="stylesheet" href="css/font-ko.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="backdrop" aria-hidden="true"></div>
+<div id="stage" data-screen="title">
+  <img class="bg" src="assets/img/bg.webp" alt="">
+
+  <!-- behind the 3D scene (the tutor and every card are 3D: js/monster.js, js/card3d.js) -->
+  <div class="layer back">
+  </div>
+
+  <canvas id="gl" aria-hidden="true"></canvas>
+
+  <!-- in front of the tutor -->
+  <div class="layer front">
+    <img class="title-el logo" id="logo" src="assets/img/logo.webp?v=5934604d" alt="Eye Catch">
+    <img class="game-el game-logo" src="assets/img/logo.webp?v=5934604d" alt="Eye Catch">
+    <button class="title-el start" id="btnStart" aria-label="Start game"><img src="assets/img/start.webp?v=b1e191c3" alt=""><i class="shine"></i></button>
+
+    <div class="game-el plate p1" id="plate1"><span class="pname">Player 1</span><span class="tally"><i class="mini-card"></i><b class="score" id="score1">0</b></span></div>
+    <div class="game-el plate p2" id="plate2"><span class="pname">Player 2</span><span class="tally"><i class="mini-card"></i><b class="score" id="score2">0</b></span></div>
+
+    <button class="game-el buzzer p1" id="buzz1" aria-label="Player 1 button" data-p="0"><span class="dome"><img src="assets/img/avatar1.webp?v=3d5c3953" alt=""></span><i class="ring"></i><i class="mic"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg></i></button>
+    <button class="game-el buzzer p2" id="buzz2" aria-label="Player 2 button" data-p="1"><span class="dome"><img src="assets/img/avatar2.webp?v=444c9ece" alt=""></span><i class="ring"></i><i class="mic"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg></i></button>
+
+    <div class="game-el wordpop" id="wordPop" aria-live="polite"></div>
+    <div class="fx" id="fx" aria-hidden="true"></div>
+
+    <div class="sys">
+      <button class="sys-btn lang" id="btnLang" aria-label="Language"><span data-l="en">EN</span><span data-l="ko">한</span></button>
+      <button class="sys-btn" id="btnSound" aria-label="Sound" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="on" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="off" d="M16 9.5l5 5M21 9.5l-5 5"/></svg></button>
+      <button class="sys-btn" id="btnHome" aria-label="Exit"><svg viewBox="0 0 24 24"><path d="M13 4H6.5A1.5 1.5 0 0 0 5 5.5v13A1.5 1.5 0 0 0 6.5 20H13"/><path d="M10 12h10"/><path d="M16.5 8.5 20 12l-3.5 3.5"/></svg></button>
+    </div>
+
+    <div class="result" id="result" aria-live="polite">
+      <div class="res-card">
+        <div class="res-faces"><div class="res-p p1"><img src="assets/img/avatar1.webp?v=3d5c3953" alt=""><b id="res1">0</b></div><div class="res-p p2"><img src="assets/img/avatar2.webp?v=444c9ece" alt=""><b id="res2">0</b></div></div>
+        <div class="res-title" id="resTitle"></div>
+        <div class="res-btns">
+          <button class="pill again" id="btnAgain"><svg viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.8 4.5v4.2h-4.2"/></svg><span>Play again</span></button>
+          <button class="pill home" id="btnHome2"><svg viewBox="0 0 24 24"><path d="M3.5 11.2 12 4l8.5 7.2"/><path d="M6 9.5V20h4.5v-5.5h3V20H18V9.5"/></svg><span>Home</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="tap-guard" id="tapGuard"></div>
+</div>
+
+<script src="vendor/three.iife.js"></script>
+<script src="js/sdf.js"></script>
+<script src="js/words.js"></script>
+<script src="js/cards-art.js"></script>
+<script src="js/art.js"></script>
+<script src="js/voice.js"></script>
+<script src="js/voice-data.js"></script>
+<script src="js/bgm-data.js" onerror="void 0"></script>
+<script src="js/audio.js"></script>
+<script src="js/mic.js"></script>
+<script src="js/stt.js"></script>
+<script src="js/monster.js"></script>
+<script src="js/card3d.js"></script>
+<script src="js/logo-data.js"></script>
+<script src="js/tin3d.js"></script>
+<script src="js/cards.js"></script>
+<script src="js/fx.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>

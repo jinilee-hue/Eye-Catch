@@ -1,0 +1,23 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>monster viewer</title>
+<style>html,body{margin:0;background:#e9d9c6}canvas{width:1200px;height:896px;display:block}</style></head>
+<body><canvas id="gl" width="2400" height="1792"></canvas>
+<script src="../vendor/three.iife.js"></script>
+<script src="../js/sdf.js"></script>
+<script>window.Sound = { talking: 0 };</script>
+<script src="../js/monster.js"></script>
+<script>
+  const Q = new URLSearchParams(location.search);
+  EC3D.init(document.getElementById('gl'));
+  EC3D.resize(0.5);
+  const m = EC3D.monster;
+  const at = (Q.get('at') || '1190,1218,560').split(',').map(Number);
+  m.place(...at);
+  m.pose(Q.get('pose') || 'hold', +(Q.get('side') || 1));
+  if (Q.get('yaw')) m.m.face.rotation.y += +Q.get('yaw');
+  if (Q.get('look')) { const [x, y] = Q.get('look').split(',').map(Number); m.lookAt(x, y); }
+  if (Q.has('talk')) m.talk(+Q.get('talk'));
+  EC3D.frozen = true;
+  for (let i = 0; i < 90; i++) EC3D.step(1 / 60);
+  window.__done = true;
+</script></body></html>

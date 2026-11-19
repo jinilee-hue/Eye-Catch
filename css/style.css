@@ -1,0 +1,265 @@
+/* Eye Catch — layout on a 2400 x 1792 stage (the mockups' own pixel grid), scaled to fit the window.
+   Colours live here as tokens; components only use var(--…). */
+:root {
+  --k: 0.5;
+  --font: 'Baloo 2', 'Jua', 'Apple SD Gothic Neo', sans-serif;
+  --cream: #fff6e6;
+  --cream-2: #f6e2c4;
+  --cream-edge: #ddb68f;
+  --cream-shadow: rgba(150, 96, 56, 0.35);
+  --ink: #6b3f22;
+  --ink-soft: rgba(107, 63, 34, 0.55);
+  --p1: #4f9ff0;
+  --p1-deep: #2f76d4;
+  --p1-ink: #1d4f96;
+  --p1-glow: rgba(79, 159, 240, 0.65);
+  --p2: #f7774f;
+  --p2-deep: #e2482f;
+  --p2-ink: #9a2a17;
+  --p2-glow: rgba(247, 119, 79, 0.65);
+  --rim-sky: #84d2f2;
+  --rim-sky-hi: #d6f4ff;
+  --rim-sky-deep: #3d9bcf;
+  --rim-gold: #f8c94a;
+  --rim-gold-hi: #fff2b8;
+  --rim-gold-deep: #d58f22;
+  --halo-sky: rgba(214, 240, 255, 0.92);
+  --halo-gold: rgba(255, 232, 160, 0.92);
+  --rim-pink: #ff9ec4;
+  --rim-pink-hi: #ffe2ee;
+  --rim-pink-deep: #e46a98;
+  --halo-pink: rgba(255, 226, 190, 0.92);
+  --tile: #ffe07a;
+  --tile-hi: #fff3bf;
+  --tile-edge: #f2bf35;
+  --tile-glow: rgba(255, 196, 46, 0.85);
+  --tile-ray: rgba(255, 214, 90, 0.75);
+  --halo-fade: rgba(255, 226, 140, 0.32);
+  --halo-core: rgba(255, 252, 236, 0.98);
+  --sel-core: rgba(255, 255, 252, 0.85);
+  --sel-mid: rgba(255, 248, 225, 0.35);
+  --sel-bloom: rgba(255, 224, 140, 0.6);
+  --sel-ring: rgba(255, 255, 255, 0.95);
+  --sel-ring-glow: rgba(255, 214, 120, 0.95);
+  --sel-spark: #fff6c8;
+  --spark-1: #fffbe8;
+  --spark-2: #ffe27a;
+  --spark-3: #ffc4de;
+  --spark-4: #bfeaff;
+  --label: #4e4a5a;
+  --locked-filter: grayscale(1) brightness(1.06) contrast(.82);
+  --logo-sat: 1.3;        /* the logo a little more saturated than the file (user: "채도 조금 높여줘") */
+  --btn-top: #ffbe63;
+  --btn-mid: #fb9545;
+  --btn-bot: #ef6a2c;
+  --btn-gloss: rgba(255, 240, 210, 0.75);
+  --btn-ring: #ffe6c4;
+  --btn-edge: #eeb37c;
+  --btn-edge-deep: #c9714a;
+  --btn-inner-shade: rgba(170, 60, 20, 0.35);
+  --btn-ink: #fff3df;
+  --btn-ink-shadow: rgba(175, 70, 25, 0.55);
+  --btn-chip-shade: rgba(220, 150, 100, 0.45);
+  --tin: #e1a0a6;
+  --tin-hi: #eeb4b8;
+  --tin-lo: #c98892;
+  --tin-shade: rgba(130, 60, 60, 0.35);
+  --tin-star: #f2c2c4;
+  --tin-wash: rgba(255, 236, 236, 0.28);
+  --tin-in-lo: #cdb9b0;
+  --tin-in: #f1e6df;
+  --tin-letter: #f6e2b8;
+  --tin-lid: #dd9ba1;
+  --card-stack: #f7f1e8;
+  --ray: rgba(255, 220, 120, 0.85);
+  --ray-core: rgba(255, 250, 225, 0.95);
+  --ribbon-a: #7ff3ff;
+  --ribbon-b: #ff8ad8;
+  --ribbon-c: #ffe680;
+  --rim-l: #ffd42a;
+  --rim-l-deep: #f2b705;
+  --rim-r: #ff9a3c;
+  --rim-r-deep: #ef6f1c;
+  --card: #fffdf8;
+  --card-edge: #f1e7d8;
+  --card-shadow: rgba(80, 60, 40, 0.28);
+  --glow: rgba(255, 246, 200, 0.95);
+  --glow-soft: rgba(255, 236, 160, 0.0);
+  --orange: #ff8a3d;
+  --orange-deep: #f0612a;
+  --pink: #ff5fa2;
+  --mint: #7fd8b8;
+  --shade: rgba(60, 30, 20, 0.18);
+  --white-a60: rgba(255, 255, 255, 0.6);
+  --white-a30: rgba(255, 255, 255, 0.3);
+  --dim: rgba(40, 24, 18, 0.38);
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--cream-2); font-family: var(--font); user-select: none; -webkit-user-select: none; }
+button { font: inherit; border: 0; background: none; padding: 0; cursor: pointer; color: inherit; }
+img { -webkit-user-drag: none; user-select: none; }
+
+/* the room fills the whole window (cover); the play area (stage) is fitted inside it, and the things that belong at the
+   screen edges (plates, buttons, sys, result dim) move out to the real edges by --ex / --ey (set in game.js fit()) */
+#backdrop { position: fixed; inset: 0; background: url(../assets/img/bg.webp) center / cover no-repeat; }
+#stage { position: absolute; left: 50%; top: 50%; width: 2400px; height: 1792px; transform: translate(-50%, -50%) scale(var(--k)); transform-origin: 50% 50%; overflow: visible; --ex: 0px; --ey: 0px; }
+#stage > .bg { display: none; }
+.layer { position: absolute; inset: 0; pointer-events: none; }
+.layer.back { z-index: 2; }
+#gl { position: absolute; left: 0; top: 0; width: 2400px; height: 1792px; z-index: 5; pointer-events: none; }
+.layer.front { z-index: 8; }
+.layer button { pointer-events: auto; }
+
+#stage[data-screen="title"] .game-el, #stage[data-screen="game"] .title-el { display: none !important; }
+
+/* ── title ─────────────────────────────────────────────────────────────── */
+.logo { position: absolute; left: 360px; top: 62px; width: 1680px;   /* ~85 % (user: "로고 조금 줄여줘"), centred */ transform-origin: 50% 70%; filter: saturate(var(--logo-sat)); }
+.logo.drop { animation: logoDrop 1.1s cubic-bezier(.2, 1.4, .4, 1) both; }
+.logo.float { animation: logoFloat 4.2s ease-in-out infinite; }
+@keyframes logoDrop { 0% { transform: translateY(-520px) scale(.6) rotate(-6deg); opacity: 0; } 55% { opacity: 1; transform: translateY(18px) scale(1.04, .94); } 75% { transform: translateY(-10px) scale(.98, 1.03); } 100% { transform: none; } }
+@keyframes logoFloat { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-12px) rotate(-.4deg); } }
+.start { position: absolute; left: 674px; top: 1315px; width: 1052px; height: 368px; border-radius: 184px; overflow: hidden; transform-origin: 50% 60%; }
+.start img { width: 100%; height: 100%; display: block; }
+.start.in { animation: startIn .7s cubic-bezier(.2, 1.5, .4, 1) both, breathe 2.4s ease-in-out .9s infinite; }
+.start:active { transform: scale(.95) translateY(8px); animation: none; }
+.start .shine { position: absolute; top: 10%; bottom: 14%; width: 120px; left: -200px; background: linear-gradient(100deg, transparent, var(--white-a60), transparent); transform: skewX(-18deg); animation: shine 3.4s ease-in-out 1.4s infinite; border-radius: 40px; mix-blend-mode: soft-light; }
+@keyframes startIn { 0% { transform: scale(.2) rotate(-8deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.035); } }
+@keyframes shine { 0%, 55% { left: -200px; } 85%, 100% { left: 1150px; } }
+
+/* ── cards are 3D (js/card3d.js); the "match!" tag stays HTML, on the card's top rim ── */
+.match-tag { position: absolute; width: 340px; transform: translate(-50%, -100%); pointer-events: none; animation: tagIn .5s cubic-bezier(.2, 1.6, .4, 1) both; filter: drop-shadow(0 6px 6px var(--cream-shadow)); z-index: 3; }
+@keyframes tagIn { 0% { transform: translate(-50%, -60%) scale(.3); opacity: 0; } 100% { transform: translate(-50%, -100%) scale(1); opacity: 1; } }
+/* light ribbons swirling round a card, golden ray burst (the reference video) */
+.ribbon { position: absolute; pointer-events: none; overflow: visible; }
+.ribbon path { fill: none; stroke-linecap: round; stroke-width: 14; filter: drop-shadow(0 0 10px var(--c)); stroke: var(--c); stroke-dasharray: var(--len) var(--len); stroke-dashoffset: var(--len); animation: ribbonDraw 1.2s cubic-bezier(.3, .6, .3, 1) forwards; }
+.ribbon path.thin { stroke-width: 6; animation-delay: .12s; }
+@keyframes ribbonDraw { 60% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: calc(var(--len) * -1); opacity: 0; } }
+.rays { position: absolute; width: var(--r); height: var(--r); margin: calc(var(--r) / -2) 0 0 calc(var(--r) / -2); border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle closest-side, var(--ray-core) 0 18%, transparent 70%), repeating-conic-gradient(from 0deg, var(--ray) 0 6deg, transparent 6deg 15deg);
+  -webkit-mask: radial-gradient(circle closest-side, #000 30%, transparent 100%); mask: radial-gradient(circle closest-side, #000 30%, transparent 100%);
+  animation: rays 1.4s ease-out both; }
+@keyframes rays { 0% { transform: scale(.2) rotate(0); opacity: 0; } 25% { opacity: 1; } 100% { transform: scale(1.25) rotate(40deg); opacity: 0; } }
+
+/* ── player plates ─────────────────────────────────────────────────────── */
+/* ── player pads (bottom corners): the score capsule and the big face button are ONE unit (user: "하나는 상태값이고
+   하나는 버튼인건 알겠는데 이걸 같이 묶을 수 있는 방법이 있을까? 위치는 아래가 맞는거 같고"). The capsule runs from under the
+   button toward the middle; the button sits on its outer end. Capsule: name + a mini card + the number of cards won. */
+.plate { position: absolute; top: calc(1490px + var(--ey)); height: 190px; width: 560px; border-radius: 95px; display: flex; flex-direction: column; justify-content: center; gap: 2px;
+  border: 12px solid var(--cream-2); box-shadow: 0 0 0 6px var(--cream-edge), 0 16px 22px var(--cream-shadow), inset 0 14px 0 var(--white-a30), inset 0 -12px 0 var(--shade);
+  color: var(--cream); font-weight: 800; line-height: 1; transition: filter .25s, opacity .25s; }
+.plate.p1 { left: calc(215px - var(--ex)); padding: 0 40px 0 200px; align-items: flex-start; background: linear-gradient(180deg, var(--p1), var(--p1-deep)); text-shadow: 0 5px 0 var(--p1-ink); }
+.plate.p2 { right: calc(215px - var(--ex)); padding: 0 200px 0 40px; align-items: flex-end; background: linear-gradient(180deg, var(--p2), var(--p2-deep)); text-shadow: 0 5px 0 var(--p2-ink); }
+.plate .pname { font-size: 50px; padding-top: 8px; white-space: nowrap; opacity: .92; }
+.plate .tally { display: flex; align-items: center; gap: 18px; }
+.plate .score { font-size: 100px; padding-top: 10px; min-width: 60px; display: inline-block; }
+.plate .score.bump { animation: scoreBump .7s cubic-bezier(.2, 1.8, .4, 1); }
+@keyframes scoreBump { 0% { transform: scale(1); } 35% { transform: scale(1.6) rotate(-6deg); } 100% { transform: scale(1); } }
+/* a won card, small: the card back's sunburst + cream middle */
+.mini-card { width: 74px; height: 74px; border-radius: 50%; flex: none; border: 6px solid var(--rim-gold-deep);
+  background: radial-gradient(circle closest-side, var(--cream) 0 42%, var(--rim-gold-deep) 44% 50%, transparent 52%), repeating-conic-gradient(from 0deg, var(--rim-gold) 0 12deg, var(--rim-gold-hi) 12deg 24deg);
+  box-shadow: 0 6px 0 var(--rim-gold-deep), 0 8px 10px var(--shade); }
+.plate.turn { animation: plateTurn 1s ease-in-out infinite; }
+.plate.p1.turn { box-shadow: 0 0 0 6px var(--cream-edge), 0 0 60px 18px var(--p1-glow), inset 0 14px 0 var(--white-a30), inset 0 -12px 0 var(--shade); }
+.plate.p2.turn { box-shadow: 0 0 0 6px var(--cream-edge), 0 0 60px 18px var(--p2-glow), inset 0 14px 0 var(--white-a30), inset 0 -12px 0 var(--shade); }
+@keyframes plateTurn { 50% { transform: scale(1.03); } }
+/* a locked player: the whole pad dims, not only the button */
+/* a locked player: the whole pad turns a SOLID soft grey — no transparency, which let the capsule show through the
+   button and the table through both (user: "영역이 비활성화되면서 겹쳐서 복잡해 보이는데") */
+#stage:has(#buzz1.locked) #plate1, #stage:has(#buzz2.locked) #plate2 { filter: var(--locked-filter); }
+
+/* ── buzzers: the pad's button (on the capsule's outer end) ───────────────────────────────── */
+.buzzer { position: absolute; top: calc(1420px + var(--ey)); width: 330px; height: 330px; border-radius: 50%; background: var(--cream-2); box-shadow: 0 0 0 9px var(--cream-edge), 0 22px 0 var(--cream-edge), 0 34px 30px var(--cream-shadow); transition: transform .12s; }
+.buzzer.p1 { left: calc(50px - var(--ex)); --c: var(--p1); --cd: var(--p1-deep); --glowc: var(--p1-glow); }
+.buzzer.p2 { right: calc(50px - var(--ex)); --c: var(--p2); --cd: var(--p2-deep); --glowc: var(--p2-glow); }
+.buzzer .dome { position: absolute; inset: 22px; border-radius: 50%; background: radial-gradient(circle at 38% 30%, var(--white-a60) 0 12%, transparent 30%), radial-gradient(circle at 50% 50%, var(--c) 0 55%, var(--cd) 100%);
+  box-shadow: inset 0 -18px 0 var(--shade), 0 12px 0 var(--cd); display: grid; place-items: center; transition: transform .1s, box-shadow .1s; }
+.buzzer .dome img { width: 66%; height: 66%; object-fit: contain; filter: drop-shadow(0 6px 4px var(--shade)); }
+.buzzer:active .dome, .buzzer.down .dome { transform: translateY(10px); box-shadow: inset 0 -8px 0 var(--shade), 0 2px 0 var(--cd); }
+.buzzer.ready { animation: buzzReady 1.6s ease-in-out infinite; }
+@keyframes buzzReady { 0%, 100% { box-shadow: 0 0 0 9px var(--cream-edge), 0 22px 0 var(--cream-edge), 0 34px 30px var(--cream-shadow); } 50% { box-shadow: 0 0 0 9px var(--cream-edge), 0 22px 0 var(--cream-edge), 0 0 70px 26px var(--glowc); } }
+.buzzer.locked { filter: var(--locked-filter); }
+.buzzer.chance { animation: buzzReady .9s ease-in-out infinite; }
+.buzzer .ring { position: absolute; inset: -30px; border-radius: 50%; border: 12px solid var(--c); opacity: 0; transform: scale(.9); pointer-events: none; }
+.buzzer.listen .ring { animation: ringOut 1.1s ease-out infinite; }
+.buzzer.listen .ring { --lv: 0; }
+@keyframes ringOut { 0% { opacity: .9; transform: scale(.92); } 100% { opacity: 0; transform: scale(1.32); } }
+.buzzer .mic { position: absolute; right: -6px; top: -6px; width: 112px; height: 112px; border-radius: 50%; background: var(--cream); box-shadow: 0 0 0 6px var(--c), 0 8px 12px var(--shade);
+  display: grid; place-items: center; opacity: 0; transform: scale(.3); transition: opacity .2s, transform .3s cubic-bezier(.2, 1.6, .4, 1); }
+.buzzer.p2 .mic { right: auto; left: -6px; }
+.buzzer .mic svg { width: 64px; height: 64px; fill: none; stroke: var(--cd); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.buzzer.listen .mic { opacity: 1; transform: scale(calc(1 + var(--lv, 0) * .35)); }
+.buzzer.thinking .mic { opacity: 1; transform: scale(1); animation: think 0.8s linear infinite; }
+@keyframes think { 50% { transform: scale(.9); } }
+
+/* the game screen's logo: small, top centre (user); the system buttons stay top right as on the title */
+.game-logo { position: absolute; left: 50%; top: calc(34px - var(--ey)); width: 760px; transform: translateX(-50%); pointer-events: none; filter: saturate(var(--logo-sat)) drop-shadow(0 8px 10px var(--cream-shadow)); }
+
+/* the word, big, after a match: bottom centre between the two pads (the tutor stands under the logo) */
+.wordpop { position: absolute; left: 50%; top: calc(1560px + var(--ey)); transform: translateX(-50%); padding: 6px 70px 0; height: 150px; border-radius: 75px; background: var(--cream); border: 10px solid var(--cream-2);
+  box-shadow: 0 0 0 6px var(--cream-edge), 0 14px 20px var(--cream-shadow); z-index: 3; font-size: 130px; font-weight: 800; color: var(--ink); line-height: 132px; letter-spacing: 4px; opacity: 0; pointer-events: none; white-space: nowrap; }
+.wordpop b { color: var(--pink); }
+.wordpop.show { animation: popIn .55s cubic-bezier(.2, 1.6, .4, 1) both; }
+.wordpop.hide { animation: popOut .3s ease-in both; }
+@keyframes popIn { 0% { opacity: 0; transform: translateX(-50%) scale(.3); } 100% { opacity: 1; transform: translateX(-50%) scale(1); } }
+@keyframes popOut { 0% { opacity: 1; transform: translateX(-50%) scale(1); } 100% { opacity: 0; transform: translateX(-50%) scale(.6); } }
+
+/* ── system buttons ────────────────────────────────────────────────────── */
+.sys { position: absolute; right: calc(60px - var(--ex)); top: calc(46px - var(--ey)); display: flex; gap: 40px; }
+#stage[data-screen="game"] #btnLang { display: none; }   /* the language is chosen on the title only (user) */
+/* the system buttons wear the START button's look (user: "스타트 버튼처럼 느낌 비슷하게 이질감 없이"): an orange candy body,
+   a cream ring, a tan outer edge with a darker bottom (depth), a glossy top, cream icons/letters with an orange shadow */
+.sys-btn { width: 128px; height: 128px; border-radius: 50%; display: grid; place-items: center; position: relative;
+  background: radial-gradient(90% 55% at 50% 16%, var(--btn-gloss) 0 40%, transparent 72%), linear-gradient(180deg, var(--btn-top) 0%, var(--btn-mid) 55%, var(--btn-bot) 100%);
+  box-shadow: 0 0 0 7px var(--btn-ring), 0 0 0 13px var(--btn-edge), 0 9px 0 13px var(--btn-edge-deep), 0 16px 22px 10px var(--cream-shadow),
+    inset 0 -9px 12px var(--btn-inner-shade), inset 0 6px 8px var(--white-a30); }
+.sys-btn svg { width: 56%; height: 56%; fill: none; stroke: var(--btn-ink); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 3px 0 var(--btn-ink-shadow)); }
+.sys-btn:active { transform: translateY(5px) scale(.96); box-shadow: 0 0 0 7px var(--btn-ring), 0 0 0 13px var(--btn-edge), 0 4px 0 13px var(--btn-edge-deep), 0 8px 14px 8px var(--cream-shadow), inset 0 -6px 10px var(--btn-inner-shade); }
+#btnSound .off { display: none; }
+#btnSound[aria-pressed="false"] .on { display: none; }
+#btnSound[aria-pressed="false"] .off { display: inline; }
+.sys-btn.lang { width: auto; padding: 0 16px; border-radius: 64px; display: flex; gap: 6px; align-items: center; font-weight: 800; font-size: 50px; color: var(--btn-ink); text-shadow: 0 3px 0 var(--btn-ink-shadow); }
+.sys-btn.lang span { padding: 6px 16px 0; border-radius: 40px; line-height: 1.22; opacity: .72; }
+.sys-btn.lang span.on { opacity: 1; background: var(--btn-ink); color: var(--btn-bot); text-shadow: none; box-shadow: inset 0 -4px 0 var(--btn-chip-shade); }
+
+/* ── result ────────────────────────────────────────────────────────────── */
+.result { z-index: 6; position: absolute; inset: calc(-1 * var(--ey)) calc(-1 * var(--ex)); display: none; place-items: center; background: var(--dim); pointer-events: auto; }
+.result.show { display: grid; animation: fadeIn .4s both; }
+@keyframes fadeIn { from { opacity: 0; } }
+.res-card { width: 1300px; padding: 70px 80px 80px; border-radius: 120px; background: var(--cream); border: 16px solid var(--cream-2); box-shadow: 0 0 0 8px var(--cream-edge), 0 40px 60px var(--shade); text-align: center; animation: popCard .7s cubic-bezier(.2, 1.5, .4, 1) both; }
+@keyframes popCard { 0% { transform: scale(.4) rotate(-6deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
+.res-faces { display: flex; justify-content: center; gap: 160px; }
+.res-p { position: relative; width: 300px; height: 300px; border-radius: 50%; display: grid; place-items: center; }
+.res-p.p1 { background: linear-gradient(180deg, var(--p1), var(--p1-deep)); } .res-p.p2 { background: linear-gradient(180deg, var(--p2), var(--p2-deep)); }
+.res-p img { width: 76%; }
+.res-p b { position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%); min-width: 130px; height: 110px; padding: 0 26px; border-radius: 55px; background: var(--cream); box-shadow: 0 0 0 7px var(--cream-edge); font-size: 90px; line-height: 118px; color: var(--ink); }
+.res-p.win::before { content: ''; position: absolute; top: -118px; left: 50%; width: 170px; height: 120px; transform: translateX(-50%) rotate(-8deg); background: var(--rim-l);
+  clip-path: polygon(0 100%, 0 25%, 25% 60%, 50% 0, 75% 60%, 100% 25%, 100% 100%); filter: drop-shadow(0 6px 0 var(--rim-l-deep)); animation: crown .8s cubic-bezier(.2, 1.6, .4, 1) .3s both; }
+@keyframes crown { from { transform: translateX(-50%) translateY(-80px) scale(.2); opacity: 0; } }
+.res-p.win { animation: winBob 1.2s ease-in-out infinite; }
+@keyframes winBob { 50% { transform: translateY(-14px) scale(1.04); } }
+.res-title { margin: 90px 0 50px; font-size: 120px; font-weight: 800; color: var(--ink); line-height: 1.05; }
+.res-btns { display: flex; justify-content: center; gap: 50px; }
+.pill { display: flex; align-items: center; gap: 22px; height: 160px; padding: 10px 64px 0 50px; border-radius: 80px; font-size: 72px; font-weight: 800; color: var(--cream);
+  box-shadow: 0 0 0 8px var(--cream-2), 0 0 0 14px var(--cream-edge), 0 18px 20px var(--cream-shadow), inset 0 12px 0 var(--white-a30); text-shadow: 0 4px 0 var(--shade); }
+.pill svg { width: 74px; height: 74px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; margin-top: -8px; }
+.pill.again { background: linear-gradient(180deg, var(--orange), var(--orange-deep)); }
+.pill.home { background: linear-gradient(180deg, var(--p1), var(--p1-deep)); }
+.pill:active { transform: scale(.95); }
+
+/* ── fx ────────────────────────────────────────────────────────────────── */
+.fx { position: absolute; inset: 0; pointer-events: none; overflow: visible; z-index: 2; }
+.spark { position: absolute; width: var(--s); height: var(--s); margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2); background: var(--c);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); animation: spark var(--t, .9s) cubic-bezier(.2, .8, .3, 1) both; }
+@keyframes spark { 0% { transform: translate(0, 0) scale(.2) rotate(0); opacity: 1; } 70% { opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(1) rotate(160deg); opacity: 0; } }
+.confetti { position: absolute; top: -60px; width: var(--w); height: var(--h); background: var(--c); border-radius: 6px; animation: fall var(--t) linear var(--delay) both; }
+@keyframes fall { 0% { transform: translate(0, 0) rotate(0); } 100% { transform: translate(var(--dx), 1950px) rotate(var(--r)); } }
+.burst { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; box-shadow: 0 0 0 0 var(--c); animation: burst .7s ease-out both; }
+@keyframes burst { 0% { box-shadow: 0 0 0 0 var(--c); opacity: 1; } 100% { box-shadow: 0 0 0 var(--r) var(--c); opacity: 0; } }
+.firework { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--c); animation: fw var(--t, 1.2s) cubic-bezier(.15, .7, .3, 1) both; }
+@keyframes fw { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 80% { opacity: 1; } 100% { transform: translate(var(--dx), calc(var(--dy) + 60px)) scale(.4); opacity: 0; } }
+.tap-guard { display: none; }
+
+/* a picture flying to a plate / the bubble on the tutor */
+.flyer { position: absolute; z-index: 30; pointer-events: none; }
+
