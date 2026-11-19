@@ -35,7 +35,8 @@
   // game: the tutor stands at the back of the table, top centre, between the logo and the deck (user: "캐릭터가 가운데
   // 카드와 로고 사이로 들어가야해") — the dealer behind the cards
   const PLACE = { title: [1190, 1262, 560],   // a little lower: the bigger logo (1.25x) clears its horns
-    game: [1200, 805, 390] };
+    // game: back at the bottom centre between the pads, bigger (user: "캐릭터는 원래대로 밑으로 내려서 키워줘")
+    game: [1200, 1905, 560] };
   let placeAnim = null;
   function placeMonster(where, ms = 0, from) {
     const to = PLACE[where];
@@ -43,7 +44,7 @@
     const a = from || PLACE[where === 'game' ? 'gameLow' : where] || to;
     placeAnim = { a, b: to, t0: performance.now(), ms };
   }
-  PLACE.gameLow = [1200, 520, 330];              // it drops in from above
+  PLACE.gameLow = [1200, 2700, 560];             // it rises from below
   function tick() {
     requestAnimationFrame(tick);
     if (!mon) return;
@@ -153,11 +154,12 @@
   function setBuzz(p, cls, on) { buzzEl[p].classList.toggle(cls, on); }
   function resetBuzzers() { buzzEl.forEach(b => b.classList.remove('ready', 'down', 'listen', 'thinking', 'locked', 'chance')); plateEl.forEach(p => p.classList.remove('turn')); }
   function renderScores() { scoreEl.forEach((e, i) => { e.textContent = G.scores[i]; }); }
-  function setDeckN(n) { Card3D.setDeck(n, ...DECK, 310); }
+  function setDeckN(n) { Card3D.setDeck(n, ...DECK, 290); }
   // the two cards a little apart, the deck of the cards still to come between them (user: "남은 카드도 가운데 넣어줘,
   // 두개 카드 사이에 넣어줘")
   // cards 860 px, 360 px apart: the deck (310 px, user: "이 카드는 너무 작은거 아냐?") fits between them
-  const CARD = 860, SLOT = { L: [590, 960], R: [1810, 960] }, DECK = [1200, 1060];
+  // bigger cards (user: "양 카드가 좀더 컸으면"), the deck between them again
+  const CARD = 960, SLOT = { L: [565, 900], R: [1835, 900] }, DECK = [1200, 900];
   const YAW = { L: 0.48, R: -0.48 };                // ~27° in toward the middle (user: "영상처럼 카드 각도를 가운데로")
   /** a 3D game card in slot L / R; anim 'flip' = spins in from the deck like a coin */
   function putCard(slot, words, side, anim) {
@@ -172,7 +174,7 @@
     }
     return c;
   }
-  function disposeGameCards() { [G.left, G.right, ...(G.extra || [])].forEach(c => c && c.alive && c.dispose()); G.left = G.right = null; G.extra = []; document.querySelectorAll('.match-tag').forEach(t => t.remove()); }
+  function disposeGameCards() { [G.left, G.right, ...(G.extra || []), ...(G.piles || [[], []]).flat()].forEach(c => c && c.alive && c.dispose()); G.left = G.right = null; G.extra = []; G.piles = [[], []]; document.querySelectorAll('.match-tag').forEach(t => t.remove()); }
 
   async function startGame() {
     firstTouch();
@@ -351,7 +353,8 @@
       c.hit(w, true);
       // the "match!" tag sits on the card's top rim, upright (like the mockup), so it never covers a picture
       const top = c.topScreen(), sp = c.symScreen(w);
-      const tag = document.createElement('img'); tag.className = 'match-tag'; tag.src = 'assets/img/match.webp'; tag.alt = '';
+      const tag = document.createElement('img'); tag.className = 'match-tag'; tag.alt = '';
+      tag.src = c.style === 'sky' || c.style === 'pink' ? `assets/img/match-${c.style}.webp` : 'assets/img/match.webp';   // the card's colour
       tag.style.left = top.x + 'px'; tag.style.top = (top.y + 40) + 'px';
       $('#fx').appendChild(tag);
       if (sp) FX.sparkles(sp.x, sp.y, 16, 240);
@@ -375,7 +378,7 @@
     hitCards([G.left, G.right], w);
     mon.cheer(); mon.lookAt(null); Card3D.burst();
     FX.ribbon(...SLOT.L, 520); setTimeout(() => FX.ribbon(...SLOT.R, 520), 160);
-    FX.rays(1200, 1635 + G.ey, 900);               // behind the word, bottom centre
+    FX.rays(1200, 395 - G.ey, 900);                // behind the word, under the logo
     showWord(w);
     await S.chant(w); if (!alive(tok)) return;
     await S.say(['t:great1', 't:great2', 't:great3'][Math.floor(Math.random() * 3)]); if (!alive(tok)) return;
@@ -419,12 +422,20 @@
     await next(tok);
   }
 
+  // the won cards lie on the mint table above the winner's pad, fanned out toward the middle and stacked
+  function pileSpot(p, i) {
+    const s = p ? -1 : 1, ex = G.ex || 0;
+    const x = (p ? 2400 + 0.45 * ex - 320 : 320 - 0.45 * ex) + s * i * 66;      // fanned out toward the middle
+    return { x, y: 1425 - i * 8, px: 380, rz: s * (-0.36 + i * 0.09) + (i % 2 ? 0.05 : -0.05), z: 0.6 + i * 0.03 };
+  }
   async function flyToPlate(card, p) {
     unhit();
-    const to = FX.center(plateEl[p]);
+    G.piles[p].push(card);
+    const q = pileSpot(p, G.piles[p].length - 1);
     S.sfx('whoosh');
-    await card.flyTo(to.x, to.y, 850, p ? 1 : -1);      // spins like a coin into the winner's plate
-    card.dispose();
+    await card.toPile(q.x, q.y, q.px, q.rz, q.z, 900, p ? 1 : -1);
+    S.sfx('card');
+    FX.sparkles(q.x, q.y, 10, 160);
   }
 
   async function next(tok) {
@@ -444,7 +455,7 @@
 
   async function finish(tok) {
     G.phase = 'result'; clearTimers(); resetBuzzers();
-    disposeGameCards(); Card3D.hideDeck();
+    [G.left, G.right].forEach(c => c && c.alive && c.dispose()); G.left = G.right = null; unhit(); Card3D.hideDeck();   // the won piles stay on the table
     const [a, b] = G.scores, win = a === b ? -1 : a > b ? 0 : 1;
     $('#res1').textContent = a; $('#res2').textContent = b;
     document.querySelectorAll('.res-p').forEach((e, i) => e.classList.toggle('win', i === win));
@@ -484,7 +495,7 @@
   const snd = $('#btnSound');
   snd.addEventListener('click', () => { S.setMuted(!S.muted); snd.setAttribute('aria-pressed', String(!S.muted)); });
   const lang = $('#btnLang');
-  const showLang = () => lang.querySelectorAll('span').forEach(s => s.classList.toggle('on', s.dataset.l === S.lang));
+  const showLang = () => { lang.dataset.l = S.lang; lang.querySelectorAll('.flag').forEach(f => f.classList.toggle('on', f.dataset.l === S.lang)); };
   lang.addEventListener('click', () => { S.setLang(S.lang === 'ko' ? 'en' : 'ko'); showLang(); S.sfx('tap'); if (G.screen === 'title') { S.stopVoice(); S.say('t:pressstart'); } });
   showLang();
   // phonics-api key (title only): a teacher enters it once per device; the dot shows who judges the words

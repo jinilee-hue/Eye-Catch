@@ -72,7 +72,7 @@
       pos.setX(i, x * (1 + d / r)); pos.setZ(i, z * (1 + d / r));
     }
     geo.computeVertexNormals();
-    const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: tex(cc), roughness: 0.42, metalness: 0.18, envMapIntensity: 0.9 }));
+    const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: tex(cc), roughness: 0.46, metalness: 0, envMapIntensity: 0.65 }));
     m.position.y = WH / 2;
     return m;
   }
@@ -120,7 +120,7 @@
     const pos = geo.attributes.position, uv = geo.attributes.uv;
     for (let i = 0; i < pos.count; i++) pos.setZ(i, 0.11 * hs(uv.getX(i), 1 - uv.getY(i)));
     geo.computeVertexNormals();
-    return new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: tex(cc), roughness: 0.42, metalness: 0.16, envMapIntensity: 0.9 }));
+    return new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: tex(cc), roughness: 0.46, metalness: 0, envMapIntensity: 0.65 }));
   }
 
   /** Lean the lid AGAINST the tin, never through it (user: "통이 뚜껑을 관통했어"): sample the lid's rim and face (both
@@ -157,7 +157,7 @@
   }
 
   function build() {
-    const pink = (o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color: css('--tin'), roughness: 0.4, metalness: 0.2, envMapIntensity: 0.9, side: THREE.DoubleSide }, o));
+    const pink = (o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color: css('--tin'), roughness: 0.42, metalness: 0, envMapIntensity: 0.65, side: THREE.DoubleSide }, o));
     const lathe = (pts, mat, seg = 160) => new THREE.Mesh(new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), seg), mat);
     const arc = (cx, cy, r, a0, a1, n) => { const o = []; for (let i = 0; i <= n; i++) { const a = a0 + (a1 - a0) * i / n; o.push([cx + r * cos(a), cy + r * sin(a)]); } return o; };
     const root = new THREE.Group(), drop = new THREE.Group(), body = new THREE.Group();
@@ -172,7 +172,7 @@
     igr.addColorStop(0, css('--tin-in')); igr.addColorStop(1, css('--tin-in-lo'));
     ig.fillStyle = igr; ig.fillRect(0, 0, 8, 256);
     const inner = new THREE.Mesh(new THREE.CylinderGeometry(0.955, 0.955, H - 0.03, 160, 1, true),
-      new THREE.MeshStandardMaterial({ map: tex(ic), roughness: 0.35, metalness: 0.3, side: THREE.BackSide }));
+      new THREE.MeshStandardMaterial({ map: tex(ic), roughness: 0.4, metalness: 0, side: THREE.BackSide }));
     inner.position.y = (H - 0.03) / 2; body.add(inner);
     const stack = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, H * 0.74, 96), new THREE.MeshStandardMaterial({ color: css('--card-stack'), roughness: 0.7 }));
     stack.position.y = H * 0.39; body.add(stack);
@@ -181,12 +181,12 @@
     top.root.scale.setScalar(0.88); top.root.rotation.set(-PI / 2 + 0.1, 0, 0.35); top.root.position.set(0, H * 0.78 + 0.05, -0.02);
 
     // the lid: face (relief) + a deep side band with rolled edges + a pale inside
-    const LR = 0.9, DEPTH = 0.22;                     // in front of the tin it looks bigger: a little smaller than the tin
+    const LR = 0.9, DEPTH = 0.16;                     // in front of the tin it looks bigger: a little smaller than the tin
     const lid = new THREE.Group();
     const face = buildLidFace(); face.scale.setScalar(LR * 0.985); lid.add(face);
-    const band = lathe([...arc(LR - 0.01, 0, 0.045, PI * 0.5, 0, 8), [LR + 0.035, -0.06], [LR + 0.035, -DEPTH + 0.04], ...arc(LR, -DEPTH + 0.035, 0.04, 0, -PI * 0.9, 10)], pink(), 200);
+    const band = lathe([...arc(LR - 0.02, -0.005, 0.06, PI * 0.5, 0, 12), [LR + 0.04, -0.06], [LR + 0.04, -DEPTH + 0.05], ...arc(LR - 0.005, -DEPTH + 0.05, 0.045, 0, -PI * 0.9, 12)], pink(), 200);
     band.rotation.x = PI / 2; lid.add(band);
-    const lidIn = new THREE.Mesh(new THREE.CircleGeometry(LR, 120), new THREE.MeshStandardMaterial({ color: css('--tin-in'), roughness: 0.4, metalness: 0.3 }));
+    const lidIn = new THREE.Mesh(new THREE.CircleGeometry(LR, 120), new THREE.MeshStandardMaterial({ color: css('--tin-in'), roughness: 0.45, metalness: 0 }));
     lidIn.rotation.y = PI; lidIn.position.z = -0.02; lid.add(lidIn);
     // leaning in front of the tin's right side, its face turned up toward the viewer (the mockup)
     lid.position.set(1.05, 0.7, 0.9);                 // starts overlapping the tin's front-right; settleLid moves it out front

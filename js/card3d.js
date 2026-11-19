@@ -89,10 +89,14 @@
     if (haloTexCache[style]) return haloTexCache[style];
     const c = document.createElement('canvas'); c.width = c.height = 512;
     const g = c.getContext('2d'), R = 256, E = 1 / 1.7;
+    // the card's own colour glowing off its rim (the reference video): strongest at the rim, fading smoothly out —
+    // no white band between the rim and the glow (user: "중간에 흰색이 보이는데..어색해")
+    const tint = css(STYLE[style].halo), [cr, cg, cb] = (tint.match(/[\d.]+/g) || [255, 255, 255]).map(Number);
+    const col = (al) => `rgba(${cr}, ${cg}, ${cb}, ${al})`;
     const gr = g.createRadialGradient(R, R, 0, R, R, R);
-    gr.addColorStop(0, css('--halo-core')); gr.addColorStop(E * 0.97, css('--halo-core'));
-    gr.addColorStop(E * 1.07, css(STYLE[style].halo)); gr.addColorStop(E * 1.3, css('--halo-fade'));
-    gr.addColorStop(E * 1.62, 'rgba(255, 240, 200, 0)'); gr.addColorStop(1, 'rgba(255, 240, 200, 0)');
+    gr.addColorStop(0, col(0.9)); gr.addColorStop(E * 0.98, col(0.9));
+    gr.addColorStop(E * 1.12, col(0.55)); gr.addColorStop(E * 1.32, col(0.22));
+    gr.addColorStop(E * 1.6, col(0.06)); gr.addColorStop(1, col(0));
     g.fillStyle = gr; g.fillRect(0, 0, 512, 512);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
     return (haloTexCache[style] = t);
@@ -269,6 +273,21 @@
         mover.scale.setScalar(1 - 0.93 * u); mover.rotation.y = dir * 4 * PI * u;
       }, t => t * t * (3 - 2 * t));
     };
+    /** a won card flies to its player's side of the table and lies down there, fanned on the pile (user: "카드 획득한건
+     *  민트 테이블에 양옆에 카드들이 펼쳐진채 쌓이게"). sx, sy = stage px; px = its size there; rz = its turn on the pile */
+    card.toPile = (sx, sy, px, rz, z, ms = 900, dir = 1) => {
+      const { p, k } = S.placeAt(sx, sy, z);
+      const d = p.clone().sub(root.position).divideScalar(root.scale.x);
+      const s1 = (px / 200 * k) / root.scale.x, y0 = tilt.rotation.y;
+      card.float = false; bob.position.set(0, 0, 0); bob.rotation.set(0, 0, 0);
+      if (card.halo) card.halo.visible = false;
+      return card.tween(ms, (u) => {
+        mover.position.copy(d).multiplyScalar(u); mover.position.y += sin(u * PI) * 0.9;
+        mover.scale.setScalar(1 + (s1 - 1) * u);
+        tilt.rotation.y = y0 * (1 - u);
+        mover.rotation.set(-1.0 * u, dir * 2 * PI * u, rz * u);       // a flip on the way, then flat on the table
+      }, t => t * t * (3 - 2 * t));
+    };
     /** a sky / gold rim for the slot it now sits in (the right card slides over to the left) */
     card.restyle = (style, ms = 700) => {
       const to = new THREE.Color(css(STYLE[style].rim)), from = rimMat.color.clone();
@@ -405,7 +424,7 @@
         amb.rays.position.copy(p); amb.rays.rotation.z = t * 0.12;
         amb.boost = Math.max(0, (amb.boost || 0) - dt * 0.7);
         amb.rays.scale.setScalar((7.5 + 0.5 * sin(t * 1.3) + 8 * amb.boost) * k);   // a glow round the deck; flares on a match
-        amb.rays.material.opacity = 0.5 + 0.08 * sin(t * 1.7) + 0.45 * amb.boost;
+        amb.rays.material.opacity = 0.85 * amb.boost;                 // only the match burst (user: the white in the middle)
         for (const m of amb.sparks) {
           const u = m.userData, yy = u.y - ((t * u.up) % 260) + 130;
           const q = S.placeAt(u.x + 18 * sin(t * 0.5 + u.ph), yy, u.z);

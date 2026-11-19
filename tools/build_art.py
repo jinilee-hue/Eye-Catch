@@ -190,6 +190,27 @@ for name, (ref, box) in JOBS.items():
     im, b = trim(Image.open(CUT / f'{name}.png').convert('RGBA'))
     im.save(IMG / f'{name}.webp', quality=90, method=6)
     ART[name] = {'w': im.width, 'h': im.height, 'ref': [box[0] + b[0], box[1] + b[1]]}
+# the "match!" tag in each card's colour (user: "카드 위에 match 텍스트가 주황색인데 카드 색에 맞게"): the orange letter
+# fill and its dark shade take the card's hue, the cream outline stays
+def recolour(im, hue_deg, sat_k=1.0, val_k=1.0):
+    a = np.asarray(im.convert('RGBA')).astype(np.float32) / 255
+    rgb = a[..., :3]
+    mx, mn = rgb.max(2), rgb.min(2)
+    d = mx - mn + 1e-6
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    h = np.where(mx == r, ((g - b) / d) % 6, np.where(mx == g, (b - r) / d + 2, (r - g) / d + 4)) * 60
+    sat = d / (mx + 1e-6)
+    sel = (sat > 0.3) & ((h < 33) | (h > 345))
+    # HSV -> RGB with the new hue for the selected pixels
+    H = np.full_like(h, hue_deg) / 60; S = np.clip(sat * sat_k, 0, 1); V = np.clip(mx * val_k, 0, 1)
+    i = np.floor(H).astype(int) % 6; f = H - np.floor(H)
+    P, Q, T = V * (1 - S), V * (1 - S * f), V * (1 - S * (1 - f))
+    out = np.stack([np.choose(i, [V, Q, P, P, T, V]), np.choose(i, [T, V, V, Q, P, P]), np.choose(i, [P, P, T, V, V, Q])], -1)
+    rgb2 = np.where(sel[..., None], out, rgb)
+    return Image.fromarray((np.dstack([rgb2, a[..., 3]]) * 255 + 0.5).astype(np.uint8), 'RGBA')
+match = Image.open(IMG / 'match.webp')
+recolour(match, 199, 1.0, 0.98).save(IMG / 'match-sky.webp', quality=90, method=6)
+recolour(match, 336, 0.95, 1.0).save(IMG / 'match-pink.webp', quality=90, method=6)
 # the card tin, cut from the title mockup by tools/cut_tin.py (the user's background has none)
 tin = Image.open(CUT / 'tin_final.png').convert('RGBA')
 tin.save(IMG / 'tin.webp', quality=90, method=6)
