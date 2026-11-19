@@ -263,17 +263,30 @@
   // the spoken word: the company phonics-api first (a teacher's key on this device; js/phonics-api.js compares the
   // phonemes it heard with every picture on the table), the on-device recogniser when it can't answer
   const PH = Object.fromEntries(window.EC_WORDS.words.map(w => [w.w, w.ph]));
+  // Both judges listen at once (user: "음성 인식률이 많이 떨어지네"; tools/qa/api_vs_device.py, 12 words × 8 voices incl. a
+  // child and Korean-accented voices): the server alone passed 83 % of right words, now 90 % — the server's 'ok'; when it
+  // is unsure, the picture its phonemes are nearest to (clearly, among the pictures on the table) or the on-device
+  // recogniser's 'ok'; the server's 'wrong' (another picture heard almost exactly) still stands. Other words passed
+  // 2.6 % -> 5.2 % (mostly mitt / meat, a sound apart).
   async function judgeSpeech(pcm16k) {
+    const target = answer(), rv = rivals();
+    const dev = STT.judge(pcm16k, target, rv);
     if (window.PhonicsAPI && PhonicsAPI.usable()) {
-      const r = await PhonicsAPI.analyze(PhonicsAPI.encodeWav(pcm16k, 16000), answer());
+      const r = await PhonicsAPI.analyze(PhonicsAPI.encodeWav(pcm16k, 16000), target);
       if (r.ok) {
-        const j = PhonicsAPI.judge(r.data, answer(), rivals(), PH);
-        STT.last = { by: 'phonics-api', target: answer(), ms: r.ms, verdict: j.verdict, heard: j.heard, d: j.d };
-        return j.verdict === 'silence' ? 'unclear' : j.verdict;
+        const j = PhonicsAPI.judge(r.data, target, rv, PH);
+        STT.last = { by: 'phonics-api', target, ms: r.ms, verdict: j.verdict, heard: j.heard, d: j.d };
+        if (j.verdict === 'ok') return 'ok';
+        if (j.verdict === 'wrong') return 'wrong';
+        const dt = j.d[target], dr = Math.min(...rv.filter(w => j.d[w] != null).map(w => j.d[w]), Infinity);
+        if (j.heard && dt != null && j.rel <= 1.0 && dr - dt >= 0.2) return 'ok';      // nearest picture, clearly
+        const d = await dev;
+        if (d === 'ok') { STT.last.dev = 'ok'; return 'ok'; }
+        return 'unclear';
       }
       if (Q.has('log')) console.log('phonics-api failed -> on-device', r.reason, r.status || '');
     }
-    return STT.judge(pcm16k, answer(), rivals());
+    return dev;
   }
   function round(tok) {
     G.phase = 'race'; G.locked = [false, false];
