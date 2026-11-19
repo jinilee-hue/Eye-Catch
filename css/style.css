@@ -47,6 +47,9 @@
   --spark-3: #ffc4de;
   --spark-4: #bfeaff;
   --label: #4e4a5a;
+  --skip-bg: rgba(255, 255, 255, 0.42);
+  --skip-shade: rgba(60, 40, 80, 0.18);
+  --skip-ink-shadow: rgba(90, 70, 120, 0.45);
   --word-ink: #1f1d24;
   --mic-gloss: rgba(255, 255, 255, 0.8);
   --mic-on: #3fd98f;
@@ -315,3 +318,12 @@ img { -webkit-user-drag: none; user-select: none; }
 /* a picture flying to a plate / the bubble on the tutor */
 .flyer { position: absolute; z-index: 30; pointer-events: none; }
 
+
+/* SKIP the explanation (game screen, only while the tutor explains): a white see-through pill with white letters, like
+   Phonics Match's — quiet, no outline, no arrow; right side above Player 2's pad */
+.skip-btn { position: absolute; right: calc(70px - var(--ex)); top: calc(1300px + var(--ey)); height: 104px; padding: 8px 54px 0; border-radius: 52px;
+  background: var(--skip-bg); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 8px 18px var(--skip-shade);
+  color: var(--card-face); font-size: 56px; font-weight: 800; letter-spacing: 4px; text-shadow: 0 3px 6px var(--skip-ink-shadow);
+  opacity: 0; transform: translateY(20px); pointer-events: none; transition: opacity .3s, transform .3s; }
+.skip-btn.show { opacity: 1; transform: none; pointer-events: auto; }
+.skip-btn:active { transform: scale(.95); }

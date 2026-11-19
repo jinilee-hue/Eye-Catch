@@ -212,35 +212,47 @@
   }
 
   /** the rules, shown with two demo cards (first game of the visit) */
+  // SKIP during the explanation (user: "설명 skip 버튼도 추가해줘. 처음에만 듣고 나중에는 안듣고 skip할거니까"):
+  // a white see-through pill like Phonics Match's; it stops the voice, clears the demo cards and goes on to the deal
   async function teach(tok) {
-    if (!G.helloed) { G.helloed = true; mon.wave(1); await S.say('t:hello'); if (!alive(tok)) return; }
+    const on = () => alive(tok) && !G.skipTeach;
+    G.skipTeach = false;
+    const skip = $('#btnSkip'); skip.classList.add('show');
+    try { await teachSteps(on); } finally {
+      skip.classList.remove('show');
+      [...(G.extra || [])].forEach(c => c && c.alive && c.dispose()); G.extra = []; unhit();
+      [0, 1].forEach(p => setBuzz(p, 'chance', false));
+      if (alive(tok)) { mon.pose('up'); mon.lookAt(null); }
+    }
+  }
+  async function teachSteps(on) {                    // on() = still explaining (not skipped, same game)
+    if (!G.helloed) { G.helloed = true; mon.wave(1); await S.say('t:hello'); if (!on()) return; }
     const demo = Cards.makeDeck(2);
-    const L = putCard('L', demo.cards[0], 'left', 'flip');
-    await wait(240);
-    const R = putCard('R', demo.cards[1], 'right', 'flip');
-    await wait(600);
+    const L = putCard('L', demo.cards[0], 'left', 'flip'); G.extra = [L];
+    await wait(240); if (!on()) return;
+    const R = putCard('R', demo.cards[1], 'right', 'flip'); G.extra.push(R);
+    await wait(600); if (!on()) return;
     mon.lookAt(...SLOT.L);
     const said = S.say('t:rule1');
-    await wait(1300); mon.lookAt(...SLOT.R);
-    await said; if (!alive(tok)) return;
-    G.extra = [L, R];
+    await wait(1300); if (!on()) return; mon.lookAt(...SLOT.R);
+    await said; if (!on()) return;
     hitCards([L, R], demo.answers[0]);
     mon.lookAt(null); mon.hop(1);
-    await S.chant(demo.answers[0]); if (!alive(tok)) return;
-    await wait(300);
+    await S.chant(demo.answers[0]); if (!on()) return;
+    await wait(300); if (!on()) return;
     // the buttons
     mon.pose('point', -1); mon.lookAt(200 - G.ex, 1580 + G.ey); setBuzz(0, 'chance', true);
     const r2 = S.say('t:rule2');
-    await wait(1500); setBuzz(0, 'chance', false); mon.pose('point', 1); mon.lookAt(2200 + G.ex, 1580 + G.ey); setBuzz(1, 'chance', true);
+    await wait(1500); if (!on()) return;
+    setBuzz(0, 'chance', false); mon.pose('point', 1); mon.lookAt(2200 + G.ex, 1580 + G.ey); setBuzz(1, 'chance', true);
     await r2; await wait(400); setBuzz(1, 'chance', false);
-    if (!alive(tok)) return;
+    if (!on()) return;
     mon.pose('up'); mon.lookAt(null);
     await S.say('t:rule3');
-    if (!alive(tok)) return;
+    if (!on()) return;
     unhit();
     S.sfx('whoosh');
     await Promise.all([L.gone(), R.gone()]);
-    L.dispose(); R.dispose(); G.extra = [];
   }
 
   // ── a round ───────────────────────────────────────────────────────────────────────────────────────────
@@ -484,6 +496,7 @@
     if (['KeyL', 'KeyP', 'ArrowRight', 'ShiftRight'].includes(e.code)) buzz(1);
   });
   $('#btnStart').addEventListener('click', () => { S.sfx('pop'); startGame(); });
+  $('#btnSkip').addEventListener('click', (e) => { e.stopPropagation(); if (G.skipTeach) return; G.skipTeach = true; S.sfx('tap'); S.stopVoice(); });
   $('#btnAgain').addEventListener('click', () => { S.sfx('pop'); startGame(); });
   // Exit (user: "인트로에도 나가기 버튼은 있어야해"): game / result -> the title; on the title it leaves the game like
   // Croco Phonics / Magic Block: back to the page it came from, else close the tab, else reload
