@@ -166,9 +166,13 @@ img { -webkit-user-drag: none; user-select: none; }
 .plate .score.bump { animation: scoreBump .7s cubic-bezier(.2, 1.8, .4, 1); }
 @keyframes scoreBump { 0% { transform: scale(1); } 35% { transform: scale(1.6) rotate(-6deg); } 100% { transform: scale(1); } }
 /* a won card, small: the card back's sunburst + cream middle */
-.mini-card { width: 74px; height: 74px; border-radius: 50%; flex: none; border: 6px solid var(--rim-gold-deep);
-  background: radial-gradient(circle closest-side, var(--cream) 0 42%, var(--rim-gold-deep) 44% 50%, transparent 52%), repeating-conic-gradient(from 0deg, var(--rim-gold) 0 12deg, var(--rim-gold-hi) 12deg 24deg);
-  box-shadow: 0 6px 0 var(--rim-gold-deep), 0 8px 10px var(--shade); }
+/* the won-card icon = the real card back (user: "실제 카드 뒷면컬러로"): sunburst in the deck's colours with the deep
+   centre — Player 1 the sky back, Player 2 the pink back */
+.mini-card { width: 74px; height: 74px; border-radius: 50%; flex: none; border: 5px solid var(--mc);
+  background: radial-gradient(circle closest-side, var(--mc-deep) 0 56%, transparent 58%), repeating-conic-gradient(from 0deg, var(--mc) 0 12deg, var(--mc-hi) 12deg 24deg);
+  box-shadow: 0 5px 0 var(--mc-deep), 0 8px 10px var(--shade); }
+.plate.p1 .mini-card { --mc: var(--rim-sky); --mc-hi: var(--rim-sky-hi); --mc-deep: var(--rim-sky-deep); }
+.plate.p2 .mini-card { --mc: var(--rim-pink); --mc-hi: var(--rim-pink-hi); --mc-deep: var(--rim-pink-deep); }
 .plate.turn { animation: plateTurn 1s ease-in-out infinite; }
 .plate.p1.turn { box-shadow: 0 0 60px 18px var(--p1-glow), inset 0 -12px 0 var(--shade); }
 .plate.p2.turn { box-shadow: 0 0 60px 18px var(--p2-glow), inset 0 -12px 0 var(--shade); }
