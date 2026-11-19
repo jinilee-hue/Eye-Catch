@@ -105,16 +105,12 @@
     const gr = g.createRadialGradient(R * 0.75, R * 0.6, R * 0.1, R, R, R);
     gr.addColorStop(0, css('--tin-hi')); gr.addColorStop(1, css('--tin'));
     g.fillStyle = gr; g.fillRect(0, 0, N, N);
-    g.strokeStyle = css('--tin-lo'); g.lineWidth = N * 0.012; g.beginPath(); g.arc(R, R, R * 0.9, 0, 2 * PI); g.stroke();   // the groove's shade
     g.fillStyle = css('--tin-star'); stars(g, N);
     g.filter = `blur(${Math.round(N * 0.008)}px)`; words(g, N, css('--tin-shade'), N * 0.012); g.filter = 'none';
     words(g, N, css('--tin-letter'));
     // height: rim, groove, raised plateau, + stars, + the logo's letters
     const h = 512, hR = 256, hc = canvas(h, h), hg = hc.getContext('2d');
     hg.fillStyle = 'rgb(64,64,64)'; hg.fillRect(0, 0, h, h);
-    hg.filter = 'blur(5px)';
-    hg.fillStyle = 'rgb(12,12,12)'; hg.beginPath(); hg.arc(hR, hR, hR * 0.925, 0, 2 * PI); hg.fill();
-    hg.fillStyle = 'rgb(90,90,90)'; hg.beginPath(); hg.arc(hR, hR, hR * 0.875, 0, 2 * PI); hg.fill();
     hg.filter = 'blur(2px)'; hg.globalCompositeOperation = 'lighter';
     hg.fillStyle = 'rgb(55,55,55)'; stars(hg, h);
     hg.filter = 'blur(6px)'; hg.globalAlpha = 0.75; words(hg, h, 'rgb(255,255,255)');
