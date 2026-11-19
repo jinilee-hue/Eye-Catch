@@ -47,6 +47,9 @@
   --spark-3: #ffc4de;
   --spark-4: #bfeaff;
   --label: #4e4a5a;
+  --wc-frame-lo: #eceef3;
+  --wc-edge: #d5d9e2;
+  --wc-line: rgba(30, 40, 70, 0.08);
   --skip-bg: rgba(255, 255, 255, 0.42);
   --skip-shade: rgba(60, 40, 80, 0.18);
   --skip-ink-shadow: rgba(90, 70, 120, 0.45);
@@ -223,17 +226,16 @@ img { -webkit-user-drag: none; user-select: none; }
    with its first sound in the point colour, a round speaker to hear it again; the edge in the winner's colour */
 .word-card { --cw: 430px; width: var(--cw); aspect-ratio: .86; display: grid; grid-template-rows: minmax(0, 1fr) auto;
   padding: calc(var(--cw) * .09) calc(var(--cw) * .09) calc(var(--cw) * .17); border-radius: calc(var(--cw) * .11); position: relative; isolation: isolate;
-  /* volume (user: "가운데 이미지 카드 자체도 볼륨감이"): a candy frame in the winner's colour — light at the top, deep at
-     the bottom, a glossy band — with a solid edge under it (the card's thickness) and a soft drop shadow; the white face
-     inside stays flat */
-  background: radial-gradient(90% 30% at 50% 4%, var(--mic-gloss) 0 40%, transparent 75%), linear-gradient(180deg, var(--edge) 0%, var(--edge) 55%, var(--edge-deep) 100%);
-  border-bottom: calc(var(--cw) * .035) solid var(--edge-deep);   /* the thickness = its own bottom border: no seam */
+  /* volume (user: "가운데 이미지 카드 자체도 볼륨감이"), white frame (user: "테두리 흰색이 나을거 같은데"): a white frame
+     shading to a light grey at the bottom, its own bottom border as the thickness (no seam), a soft drop shadow */
+  background: linear-gradient(180deg, var(--card-face) 0%, var(--card-face) 60%, var(--wc-frame-lo) 100%);
+  border-bottom: calc(var(--cw) * .035) solid var(--wc-edge);   /* the thickness = its own bottom border: no seam */
   box-shadow: 0 calc(var(--cw) * .05) calc(var(--cw) * .08) var(--card-shadow), inset 0 calc(var(--cw) * .012) 0 var(--white-a60); }
 .word-card::before { content: ''; position: absolute; inset: calc(var(--cw) * .045); border-radius: calc(var(--cw) * .075); background: var(--card-face); z-index: -1;
-  box-shadow: 0 0 0 calc(var(--cw) * .006) var(--edge-deep); }
+  box-shadow: inset 0 0 0 calc(var(--cw) * .004) var(--wc-line); }
 .word-card .pic { position: relative; min-height: 0; }
 .word-card .pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
-.word-card .word { font: 700 calc(var(--cw) * .19)/1.05 var(--font); text-align: center; color: var(--word-ink); letter-spacing: .01em; white-space: nowrap; }
+.word-card .word { font: 700 calc(var(--cw) * var(--wf, .19))/1.05 var(--font); min-width: 0; overflow: visible; text-align: center; color: var(--word-ink); letter-spacing: .01em; white-space: nowrap; }
 .word-card .word b { color: var(--pink); font-weight: 800; }
 .word-card .snd { position: absolute; left: 50%; bottom: calc(var(--cw) * -.12); transform: translateX(-50%); width: calc(var(--cw) * .24); height: calc(var(--cw) * .24);
   border-radius: 50%; display: grid; place-items: center; pointer-events: auto; cursor: pointer;

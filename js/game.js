@@ -154,7 +154,7 @@
   function setBuzz(p, cls, on) { buzzEl[p].classList.toggle(cls, on); }
   function resetBuzzers() { buzzEl.forEach(b => b.classList.remove('ready', 'down', 'listen', 'thinking', 'locked', 'chance')); plateEl.forEach(p => p.classList.remove('turn')); }
   function renderScores() { scoreEl.forEach((e, i) => { e.textContent = G.scores[i]; }); }
-  function setDeckN(n) { Card3D.setDeck(n, ...DECK, 290); }
+  function setDeckN(n) { Card3D.setDeck(n, ...DECK, 370); }   // bigger (user: "가운데 덮힌 카드도 좀 더 키우면")
   // the two cards a little apart, the deck of the cards still to come between them (user: "남은 카드도 가운데 넣어줘,
   // 두개 카드 사이에 넣어줘")
   // cards 860 px, 360 px apart: the deck (310 px, user: "이 카드는 너무 작은거 아냐?") fits between them
@@ -381,6 +381,9 @@
     el.innerHTML = `<div class="word-card" style="--edge:${edge[0]};--edge-deep:${edge[1]}"><div class="pic"><img src="${info.img}" alt="" draggable="false"></div>`
       + `<div class="word"><b>${w[0]}</b>${w.slice(1)}</div><div class="snd" role="button" aria-label="Listen: ${w}">${SPK}</div></div>`;
     el.querySelector('.snd').addEventListener('pointerdown', (e) => { e.stopPropagation(); S.stopVoice(); S.chant(w); });
+    // a long word ("mushroom") shrinks to fit the card's inner width
+    const wd = el.querySelector('.word'), room = wd.clientWidth;
+    for (let f = .19; f > .08 && wd.scrollWidth > room; f -= .01) wd.style.setProperty('--wf', f.toFixed(2));
     el.classList.remove('hide'); void el.offsetWidth; el.classList.add('show');
     Card3D.deckPeek(false);
   }
