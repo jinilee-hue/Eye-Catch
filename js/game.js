@@ -361,9 +361,14 @@
     [G.left, G.right, ...(G.extra || [])].forEach(c => c && c.alive && c.clearHits());
     document.querySelectorAll('.match-tag').forEach(t => t.remove());
   }
-  function showWord(w) {
-    const el = $('#wordPop');
-    el.innerHTML = `<b>${w[0]}</b>${w.slice(1)}`;
+  // the word as a picture card in the middle (user: "이미지와 단어 같이 나오는 카드 … 같이 가운데 나오면"); p = who won it
+  const SPK = '<svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>';
+  function showWord(w, p) {
+    const el = $('#wordPop'), info = Cards.byW[w];
+    const edge = p === 0 ? ['var(--p1)', 'var(--p1-deep)'] : p === 1 ? ['var(--p2)', 'var(--p2-deep)'] : ['var(--rim-sky)', 'var(--rim-sky-deep)'];
+    el.innerHTML = `<div class="word-card" style="--edge:${edge[0]};--edge-deep:${edge[1]}"><div class="pic"><img src="${info.img}" alt="" draggable="false"></div>`
+      + `<div class="word"><b>${w[0]}</b>${w.slice(1)}</div><div class="snd" role="button" aria-label="Listen: ${w}">${SPK}</div></div>`;
+    el.querySelector('.snd').addEventListener('pointerdown', (e) => { e.stopPropagation(); S.stopVoice(); S.chant(w); });
     el.classList.remove('hide'); void el.offsetWidth; el.classList.add('show');
     Card3D.deckPeek(false);
   }
@@ -376,7 +381,7 @@
     mon.cheer(); mon.lookAt(null); Card3D.burst();
     FX.ribbon(...SLOT.L, 520); setTimeout(() => FX.ribbon(...SLOT.R, 520), 160);
     FX.rays(1200, 900, 900);                       // behind the word, over the deck
-    showWord(w);
+    showWord(w, p);
     await S.chant(w); if (!alive(tok)) return;
     await S.say(['t:great1', 't:great2', 't:great3'][Math.floor(Math.random() * 3)]); if (!alive(tok)) return;
     // the left card goes to the winner
@@ -410,7 +415,7 @@
     resetBuzzers(); buzzEl.forEach(b => b.classList.add('locked'));
     const w = answer();
     await S.say('t:answer'); if (!alive(tok)) return;
-    hitCards([G.left, G.right], w); showWord(w); Card3D.burst();
+    hitCards([G.left, G.right], w); showWord(w, -1); Card3D.burst();
     await S.chant(w); if (!alive(tok)) return;
     await wait(500);
     unhit(); S.sfx('whoosh');

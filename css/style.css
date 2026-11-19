@@ -47,6 +47,7 @@
   --spark-3: #ffc4de;
   --spark-4: #bfeaff;
   --label: #4e4a5a;
+  --word-ink: #1f1d24;
   --mic-gloss: rgba(255, 255, 255, 0.8);
   --mic-shade: rgba(20, 30, 70, 0.28);
   --locked-filter: grayscale(1) brightness(1.06) contrast(.82);
@@ -208,13 +209,27 @@ img { -webkit-user-drag: none; user-select: none; }
 .game-logo { position: absolute; left: 50%; top: calc(30px - var(--ey)); width: 520px;   /* bigger (user) */ transform: translateX(-50%); pointer-events: none; filter: drop-shadow(0 8px 10px var(--cream-shadow)); }
 
 /* the word, big, after a match: under the small logo, above the cards (the tutor stands at the bottom) */
-.wordpop { position: absolute; left: 50%; top: 825px;   /* over the deck (it dips out meanwhile): the bigger logo took the top */ transform: translateX(-50%); padding: 6px 70px 0; height: 150px; border-radius: 75px; background: var(--cream); border: 10px solid var(--cream-2);
-  box-shadow: 0 0 0 6px var(--cream-edge), 0 14px 20px var(--cream-shadow); z-index: 3; font-size: 130px; font-weight: 800; color: var(--ink); line-height: 132px; letter-spacing: 4px; opacity: 0; pointer-events: none; white-space: nowrap; }
-.wordpop b { color: var(--pink); }
-.wordpop.show { animation: popIn .55s cubic-bezier(.2, 1.6, .4, 1) both; }
+.wordpop { position: absolute; left: 50%; top: 900px; z-index: 3; opacity: 0; pointer-events: none; transform: translate(-50%, -50%); }
+/* the word as a picture card, like the other phonics games' cards (Croco Phonics): the picture on top, the word under it
+   with its first sound in the point colour, a round speaker to hear it again; the edge in the winner's colour */
+.word-card { --cw: 430px; width: var(--cw); aspect-ratio: .86; display: grid; grid-template-rows: minmax(0, 1fr) auto;
+  padding: calc(var(--cw) * .07) calc(var(--cw) * .07) calc(var(--cw) * .15); border-radius: calc(var(--cw) * .1);
+  background: var(--card-face); border: calc(var(--cw) * .036) solid var(--edge, var(--rim-sky));
+  box-shadow: 0 calc(var(--cw) * .045) calc(var(--cw) * .09) var(--card-shadow); position: relative; }
+.word-card .pic { position: relative; min-height: 0; }
+.word-card .pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+.word-card .word { font: 700 calc(var(--cw) * .19)/1.05 var(--font); text-align: center; color: var(--word-ink); letter-spacing: .01em; white-space: nowrap; }
+.word-card .word b { color: var(--pink); font-weight: 800; }
+.word-card .snd { position: absolute; left: 50%; bottom: calc(var(--cw) * -.12); transform: translateX(-50%); width: calc(var(--cw) * .24); height: calc(var(--cw) * .24);
+  border-radius: 50%; display: grid; place-items: center; pointer-events: auto; cursor: pointer;
+  background: radial-gradient(70% 45% at 46% 20%, var(--mic-gloss) 0 38%, transparent 70%), radial-gradient(circle at 50% 38%, var(--edge) 0 48%, var(--edge-deep) 100%);
+  box-shadow: 0 0 0 7px var(--card-face), 0 10px 16px var(--shade), inset 0 -8px 10px var(--mic-shade); }
+.word-card .snd svg { width: 56%; height: 56%; fill: none; stroke: var(--card-face); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.word-card .snd:active { transform: translateX(-50%) scale(.92); }
+.wordpop.show { animation: popIn .6s cubic-bezier(.2, 1.6, .4, 1) both; }
 .wordpop.hide { animation: popOut .3s ease-in both; }
-@keyframes popIn { 0% { opacity: 0; transform: translateX(-50%) scale(.3); } 100% { opacity: 1; transform: translateX(-50%) scale(1); } }
-@keyframes popOut { 0% { opacity: 1; transform: translateX(-50%) scale(1); } 100% { opacity: 0; transform: translateX(-50%) scale(.6); } }
+@keyframes popIn { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.2) rotate(-12deg); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); } }
+@keyframes popOut { 0% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(.6); } }
 
 /* ── system buttons ────────────────────────────────────────────────────── */
 .sys { position: absolute; right: calc(60px - var(--ex)); top: calc(46px - var(--ey)); display: flex; gap: 40px; }
