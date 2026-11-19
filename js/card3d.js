@@ -91,19 +91,19 @@
     return (backTex[style] = t);
   }
   let haloTexCache = {};
-  // halo plane = 3.4 coin radii across (half 1.7): the coin's edge sits at 1/1.7 = 0.59 of the half width
+  // halo plane = 2.5 coin radii across (half 1.25): the coin's edge sits at 1/1.25 = 0.8 of the half width
   function haloTexture(style) {
     if (haloTexCache[style]) return haloTexCache[style];
     const c = document.createElement('canvas'); c.width = c.height = 512;
-    const g = c.getContext('2d'), R = 256, E = 1 / 1.7;
+    const g = c.getContext('2d'), R = 256, E = 1 / 1.25;
     // the card's own colour glowing off its rim (the reference video): strongest at the rim, fading smoothly out —
     // no white band between the rim and the glow (user: "중간에 흰색이 보이는데..어색해")
     const tint = css(STYLE[style].halo), [cr, cg, cb] = (tint.match(/[\d.]+/g) || [255, 255, 255]).map(Number);
     const col = (al) => `rgba(${cr}, ${cg}, ${cb}, ${al})`;
     const gr = g.createRadialGradient(R, R, 0, R, R, R);
-    gr.addColorStop(0, col(0.9)); gr.addColorStop(E * 0.98, col(0.9));
-    gr.addColorStop(E * 1.12, col(0.55)); gr.addColorStop(E * 1.32, col(0.22));
-    gr.addColorStop(E * 1.6, col(0.06)); gr.addColorStop(1, col(0));
+    gr.addColorStop(0, col(0.85)); gr.addColorStop(E * 0.98, col(0.85));
+    gr.addColorStop(E * 1.05, col(0.45)); gr.addColorStop(E * 1.13, col(0.16));
+    gr.addColorStop(E * 1.21, col(0.03)); gr.addColorStop(1, col(0));
     g.fillStyle = gr; g.fillRect(0, 0, 512, 512);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
     return (haloTexCache[style] = t);
@@ -211,7 +211,7 @@
     coin.add(rim, face, back);
     face.userData.card = card;
     if (st.halo) {
-      const halo = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 3.4), new THREE.MeshBasicMaterial({ map: haloTexture(style), transparent: true, depthWrite: false }));
+      const halo = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 2.5), new THREE.MeshBasicMaterial({ map: haloTexture(style), transparent: true, depthWrite: false }));
       halo.position.z = -0.07; halo.renderOrder = -1;            // right behind the coin, turning and floating with it
       bob.add(halo); card.halo = halo;
     }
