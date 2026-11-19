@@ -198,7 +198,7 @@ img { -webkit-user-drag: none; user-select: none; }
    rim low down, an inner bottom shade, a cream ring and a soft drop shadow; the mic in white with a coloured shadow */
 .buzzer .mic { position: absolute; right: -18px; top: -18px; width: 124px; height: 124px; border-radius: 50%;
   background: radial-gradient(70% 45% at 46% 20%, var(--mic-gloss) 0 38%, transparent 70%), radial-gradient(circle at 50% 38%, var(--mic-on) 0 48%, var(--mic-on-deep) 100%);
-  box-shadow: 0 0 0 7px var(--card-face), 0 12px 18px var(--shade), inset 0 -10px 12px var(--mic-shade), inset 0 5px 6px var(--white-a30);
+  box-shadow: 0 12px 18px var(--shade), inset 0 -10px 12px var(--mic-shade), inset 0 5px 6px var(--white-a30);   /* no white ring (user) */
   display: grid; place-items: center; opacity: 0; transform: scale(.3); transition: opacity .2s, transform .3s cubic-bezier(.2, 1.6, .4, 1); }
 .buzzer.p2 .mic { right: auto; left: -18px; }
 .buzzer .mic svg { width: 66px; height: 66px; fill: none; stroke: var(--card-face); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 3px 0 var(--mic-on-deep)); }
