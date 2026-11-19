@@ -74,13 +74,17 @@
         g.beginPath(); g.moveTo(512, 512); g.arc(512, 512, 520, i * PI / 15, (i + 1) * PI / 15); g.closePath();
         g.fillStyle = css(i % 2 ? st.hi : st.rim); g.fill();
       }
-      g.beginPath(); g.arc(512, 512, 300, 0, 2 * PI); g.fillStyle = css(st.deep); g.fill();   // the card's deep colour: the logo pops (user)
+      g.beginPath(); g.arc(512, 512, 300, 0, 2 * PI); g.fillStyle = css(st.deep); g.fill();   // the card's deep colour
       g.lineWidth = 22; g.strokeStyle = css(st.deep); g.stroke();
-      drawLogo2(g, 512, 512, 440);
+      // plain white words, no outline (user: "로고로 넣지말고 텍스트로 넣고 선없이 흰색으로 깔끔하게")
+      g.fillStyle = css('--card-face'); g.textAlign = 'center'; g.textBaseline = 'middle';
+      if ('letterSpacing' in g) g.letterSpacing = '6px';
+      g.font = '800 150px "Baloo 2", sans-serif'; g.fillText('EYE', 512, 452);
+      g.font = '800 134px "Baloo 2", sans-serif'; g.fillText('CATCH', 512, 588);
     };
     paint();
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
-    logoReady.then(() => { paint(); t.needsUpdate = true; });
+    (document.fonts ? document.fonts.load('800 150px "Baloo 2"') : Promise.resolve()).then(() => { paint(); t.needsUpdate = true; });
     return (backTex[style] = t);
   }
   let haloTexCache = {};
