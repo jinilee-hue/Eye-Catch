@@ -147,6 +147,10 @@
     card.draw = function () {
       ctx.clearRect(0, 0, TEX, TEX);
       ctx.fillStyle = css('--card-face'); ctx.beginPath(); ctx.arc(FR, FR, FR, 0, 2 * PI); ctx.fill();   // flat white
+      // a hair of soft shade right at the face's edge, so it meets the rim smoothly instead of a hard white step
+      const eg = ctx.createRadialGradient(FR, FR, FR * 0.955, FR, FR, FR);
+      eg.addColorStop(0, 'rgba(0, 0, 0, 0)'); eg.addColorStop(1, css('--face-edge'));
+      ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(FR, FR, FR, 0, 2 * PI); ctx.fill();
       // two passes: every yellow tile first, then pictures and words on top — a tile never covers a neighbour's word
       // the matched picture: a yellow tile behind the big picture, no word (user: "선택됐을때가 수정하기 전 버전이
       // 낫다는거야" — the tile-with-word try was reverted). Tiles first, pictures on top.
@@ -207,7 +211,10 @@
 
     // meshes
     const rimMat = new THREE.MeshStandardMaterial({ color: css(st.rim), roughness: 0.3, metalness: 0.05, envMapIntensity: 1.1, side: THREE.DoubleSide });
-    const faceMat = new THREE.MeshBasicMaterial({ map: tex, toneMapped: false });   // true white, no yellow cast (user)
+    const faceMat = new THREE.MeshBasicMaterial({ map: tex, toneMapped: false,   // true white, no yellow cast (user)
+      // always in front of the rim's inner edge it overlaps: at a grazing view (cards lying on the table) the 0.001 gap
+      // z-fought into a jagged, broken edge (user: "흰색면과 선 사이에 테두리 부드럽지가 않고 깨져보이는데")
+      polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 });
     // the back in the card's own colour: the deck is sky and pink cards stacked by turns, no yellow (user)
     const backMat = new THREE.MeshStandardMaterial({ map: backTexture(style === 'plain' ? 'sky' : style), roughness: 0.45 });
     const root = new THREE.Group();              // placed on the stage

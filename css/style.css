@@ -96,6 +96,7 @@
   --rim-r-deep: #ef6f1c;
   --card: #fffdf8;
   --card-face: #ffffff;
+  --face-edge: rgba(150, 140, 130, 0.22);
   --card-edge: #f1e7d8;
   --card-shadow: rgba(80, 60, 40, 0.28);
   --glow: rgba(255, 246, 200, 0.95);

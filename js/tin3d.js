@@ -91,7 +91,15 @@
     }
   }
   function buildLidFace() {
-    const N = 1024, R = N / 2, LOGO_W = N * 0.62;     // the two-line logo, straight, inside the lid
+    // the lid's words: EYE over CATCH in the same puffy cream letters as the tin's wall — not the colourful logo pasted
+    // on (user: "뚜껑에 로고가 그대로 들어가서 좀더 별루") — raised out of the pink, a soft shade under them
+    const N = 1024, R = N / 2;
+    const words = (g2, n, fill, dy = 0) => {
+      g2.fillStyle = fill; g2.textAlign = 'center'; g2.textBaseline = 'middle';
+      if ('letterSpacing' in g2) g2.letterSpacing = `${Math.round(n * 0.008)}px`;
+      g2.font = `800 ${Math.round(n * 0.25)}px "Baloo 2", sans-serif`; g2.fillText('EYE', n / 2, n * 0.4 + dy);
+      g2.font = `800 ${Math.round(n * 0.215)}px "Baloo 2", sans-serif`; g2.fillText('CATCH', n / 2, n * 0.62 + dy);
+    };
     // colour
     const cc = canvas(N, N), g = cc.getContext('2d');
     const gr = g.createRadialGradient(R * 0.75, R * 0.6, R * 0.1, R, R, R);
@@ -99,11 +107,8 @@
     g.fillStyle = gr; g.fillRect(0, 0, N, N);
     g.strokeStyle = css('--tin-lo'); g.lineWidth = N * 0.012; g.beginPath(); g.arc(R, R, R * 0.9, 0, 2 * PI); g.stroke();   // the groove's shade
     g.fillStyle = css('--tin-star'); stars(g, N);
-    // the logo, a little washed into pastel (the mockup's lid letters are lighter than the title logo)
-    const lc = canvas(N, N), lg = lc.getContext('2d');
-    Card3D.drawLogo2(lg, R, R, LOGO_W);
-    lg.globalCompositeOperation = 'source-atop'; lg.fillStyle = css('--tin-wash'); lg.fillRect(0, 0, N, N);
-    g.drawImage(lc, 0, 0);
+    g.filter = `blur(${Math.round(N * 0.008)}px)`; words(g, N, css('--tin-shade'), N * 0.012); g.filter = 'none';
+    words(g, N, css('--tin-letter'));
     // height: rim, groove, raised plateau, + stars, + the logo's letters
     const h = 512, hR = 256, hc = canvas(h, h), hg = hc.getContext('2d');
     hg.fillStyle = 'rgb(64,64,64)'; hg.fillRect(0, 0, h, h);
@@ -112,10 +117,9 @@
     hg.fillStyle = 'rgb(90,90,90)'; hg.beginPath(); hg.arc(hR, hR, hR * 0.875, 0, 2 * PI); hg.fill();
     hg.filter = 'blur(2px)'; hg.globalCompositeOperation = 'lighter';
     hg.fillStyle = 'rgb(55,55,55)'; stars(hg, h);
-    const logo = silhouette(h, h, (sg) => Card3D.drawLogo2(sg, hR, hR, LOGO_W / 2));
-    hg.filter = 'blur(4px)'; hg.globalAlpha = 0.62; hg.drawImage(logo, 0, 0);
+    hg.filter = 'blur(6px)'; hg.globalAlpha = 0.75; words(hg, h, 'rgb(255,255,255)');
     hg.globalAlpha = 1; hg.filter = 'none'; hg.globalCompositeOperation = 'source-over';
-    const hs = sampler(hc);
+    const hs0 = sampler(hc), hs = (u, v) => { const x = hs0(u, v); return x < 0.36 ? x : 0.36 + 0.64 * smooth(0.36, 0.9, x); };   // puffy
     const geo = new THREE.RingGeometry(0.0005, 1, 360, 150);
     const pos = geo.attributes.position, uv = geo.attributes.uv;
     for (let i = 0; i < pos.count; i++) pos.setZ(i, 0.11 * hs(uv.getX(i), 1 - uv.getY(i)));
