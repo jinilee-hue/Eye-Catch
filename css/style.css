@@ -322,11 +322,14 @@ img { -webkit-user-drag: none; user-select: none; }
 .flyer { position: absolute; z-index: 30; pointer-events: none; }
 
 
-/* SKIP the explanation (game screen, only while the tutor explains): a white see-through pill with white letters, like
-   Phonics Match's — quiet, no outline, no arrow; right side above Player 2's pad */
-.skip-btn { position: absolute; right: calc(70px - var(--ex)); top: calc(1300px + var(--ey)); height: 104px; padding: 8px 54px 0; border-radius: 52px;
-  background: var(--skip-bg); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 8px 18px var(--skip-shade);
-  color: var(--card-face); font-size: 56px; font-weight: 800; letter-spacing: 4px; text-shadow: 0 3px 6px var(--skip-ink-shadow);
-  opacity: 0; transform: translateY(20px); pointer-events: none; transition: opacity .3s, transform .3s; }
-.skip-btn.show { opacity: 1; transform: none; pointer-events: auto; }
-.skip-btn:active { transform: scale(.95); }
+/* SKIP the explanation = a round JUMP button next to the tutor (user: "skip 버튼은 캐릭터 옆에 점프하는 아이콘 형태로"):
+   the jumping-child icon of Phonics Match's jump button, a green candy ball; it hops in and bobs while the tutor explains */
+.skip-btn { position: absolute; left: 1584px; top: 1349px; width: 112px; height: 112px;   /* beside the tutor's raised hand, clear of the pink card and the pad */ border-radius: 50%; display: grid; place-items: center;
+  background: radial-gradient(70% 45% at 46% 20%, var(--mic-gloss) 0 38%, transparent 70%), radial-gradient(circle at 50% 38%, var(--mic-on) 0 48%, var(--mic-on-deep) 100%);
+  box-shadow: 0 12px 20px var(--shade), inset 0 -12px 14px var(--mic-shade);
+  opacity: 0; transform: scale(.3); pointer-events: none; transition: opacity .25s, transform .35s cubic-bezier(.2, 1.6, .4, 1); }
+.skip-btn svg { width: 64%; height: 64%; fill: none; stroke: var(--card-face); stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 3px 0 var(--mic-on-deep)); }
+.skip-btn svg circle { fill: var(--card-face); stroke: none; }
+.skip-btn.show { opacity: 1; transform: none; pointer-events: auto; animation: jumpBob 1.6s ease-in-out .4s infinite; }
+@keyframes jumpBob { 0%, 70%, 100% { translate: 0 0; } 80% { translate: 0 -18px; } 90% { translate: 0 0; } }
+.skip-btn:active { transform: scale(.92); }
