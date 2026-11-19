@@ -150,9 +150,11 @@
       // two passes: every yellow tile first, then pictures and words on top — a tile never covers a neighbour's word
       // the matched picture: a yellow tile behind the big picture, no word (user: "선택됐을때가 수정하기 전 버전이
       // 낫다는거야" — the tile-with-word try was reverted). Tiles first, pictures on top.
-      for (const pass of [0, 1]) for (const sl of card.slots) {
+      // pass 0: the soft light UNDER the pictures · pass 1: the pictures · pass 2: the shining ring + twinkles ON TOP of
+      // every picture (user: "반짝이는 노란빛 선이 다른 이미지 밑에서 나오는게 아니라 위에서 나와야해")
+      for (const pass of [0, 1, 2]) for (const sl of card.slots) {
         const im = IMG[sl.w], box = sl.s;
-        if (pass === 0 && sl.tile <= 0) continue;
+        if (pass !== 1 && sl.tile <= 0) continue;
         ctx.save();
         ctx.translate(sl.x + sl.shake * 14 * sin(sl.shake * 40), sl.y);
         ctx.rotate(sl.rot + sl.wig * 0.18 * sin(sl.wig * 30));
@@ -168,6 +170,12 @@
           const inn = ctx.createRadialGradient(0, 0, 0, 0, 0, R);
           inn.addColorStop(0, css('--sel-core')); inn.addColorStop(0.7, css('--sel-mid')); inn.addColorStop(1, 'rgba(255, 255, 255, 0)');
           ctx.fillStyle = inn; ctx.beginPath(); ctx.arc(0, 0, R, 0, 2 * PI); ctx.fill();
+          ctx.restore();
+          continue;
+        }
+        if (pass === 2) {
+          const tt = card.time, pulse = 0.5 + 0.5 * sin(tt * 4), R = box * 0.7 * (1 + 0.04 * pulse);
+          ctx.globalAlpha = sl.tile;
           ctx.lineWidth = box * 0.034; ctx.strokeStyle = css('--sel-ring');
           ctx.shadowColor = css('--sel-ring-glow');
           for (const blur of [44 + 20 * pulse, 22, 8]) { ctx.shadowBlur = blur; ctx.beginPath(); ctx.arc(0, 0, R, 0, 2 * PI); ctx.stroke(); }
