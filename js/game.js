@@ -154,12 +154,14 @@
   function setBuzz(p, cls, on) { buzzEl[p].classList.toggle(cls, on); }
   function resetBuzzers() { buzzEl.forEach(b => b.classList.remove('ready', 'down', 'listen', 'thinking', 'locked', 'chance')); plateEl.forEach(p => p.classList.remove('turn')); }
   function renderScores() { scoreEl.forEach((e, i) => { e.textContent = G.scores[i]; }); }
-  function setDeckN(n) { Card3D.setDeck(n, ...DECK, 370); }   // bigger (user: "가운데 덮힌 카드도 좀 더 키우면")
+  function setDeckN(n) { Card3D.setDeck(n, ...DECK, 320); }   // bigger (user: "가운데 덮힌 카드도 좀 더 키우면")
   // the two cards a little apart, the deck of the cards still to come between them (user: "남은 카드도 가운데 넣어줘,
   // 두개 카드 사이에 넣어줘")
   // cards 860 px, 360 px apart: the deck (310 px, user: "이 카드는 너무 작은거 아냐?") fits between them
   // bigger cards (user: "양 카드가 좀더 컸으면"), the deck between them again
-  const CARD = 960, SLOT = { L: [565, 900], R: [1835, 900] }, DECK = [1200, 900];
+  // room round the deck (user: "가운데 카드와 양옆에 카드 사이에 여백이 없는데 너무 붙었어"): cards a little further out,
+  // the deck a little smaller -> ~70 px clear on each side
+  const CARD = 960, SLOT = { L: [540, 900], R: [1860, 900] }, DECK = [1200, 900];
   const YAW = { L: 0.48, R: -0.48 };                // ~27° in toward the middle (user: "영상처럼 카드 각도를 가운데로")
   /** a 3D game card in slot L / R; anim 'flip' = spins in from the deck like a coin */
   function putCard(slot, words, side, anim) {
