@@ -253,9 +253,9 @@ img { -webkit-user-drag: none; user-select: none; }
    면으로 들어간 라인은 삭제") */
 .sys-btn { width: 128px; height: 128px; border-radius: 50%; display: grid; place-items: center; position: relative;
   background: radial-gradient(90% 55% at 50% 16%, var(--btn-gloss) 0 40%, transparent 72%), linear-gradient(180deg, var(--btn-top) 0%, var(--btn-mid) 55%, var(--btn-bot) 100%);
-  box-shadow: 0 0 0 6px var(--btn-ring), 0 10px 18px 4px var(--btn-drop), inset 0 6px 8px var(--white-a30); }
+  box-shadow: 0 10px 18px 4px var(--btn-drop), inset 0 6px 8px var(--white-a30); }   /* no white ring, shadow only (user) */
 .sys-btn svg { width: 56%; height: 56%; fill: none; stroke: var(--btn-ink); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 3px 0 var(--btn-ink-shadow)); }
-.sys-btn:active { transform: translateY(3px) scale(.95); box-shadow: 0 0 0 6px var(--btn-ring), 0 5px 10px 2px var(--btn-drop); }
+.sys-btn:active { transform: translateY(3px) scale(.95); box-shadow: 0 5px 10px 2px var(--btn-drop); }
 #btnSound .off { display: none; }
 #btnSound[aria-pressed="false"] .on { display: none; }
 #btnSound[aria-pressed="false"] .off { display: inline; }
