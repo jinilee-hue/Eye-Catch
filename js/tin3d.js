@@ -105,18 +105,17 @@
     const gr = g.createRadialGradient(R * 0.75, R * 0.6, R * 0.1, R, R, R);
     gr.addColorStop(0, css('--tin-hi')); gr.addColorStop(1, css('--tin'));
     g.fillStyle = gr; g.fillRect(0, 0, N, N);
-    { const pg = g.createRadialGradient(R * 0.85, R * 0.75, R * 0.1, R, R, R * 0.84);
-      pg.addColorStop(0, css('--tin-hi')); pg.addColorStop(1, 'rgba(255, 255, 255, 0)');
-      g.fillStyle = pg; g.beginPath(); g.arc(R, R, R * 0.84, 0, 2 * PI); g.fill(); }
     g.fillStyle = css('--tin-star'); stars(g, N);
     g.filter = `blur(${Math.round(N * 0.008)}px)`; words(g, N, css('--tin-shade'), N * 0.012); g.filter = 'none';
     words(g, N, css('--tin-letter'));
     // height: rim, groove, raised plateau, + stars, + the logo's letters
     const h = 512, hR = 256, hc = canvas(h, h), hg = hc.getContext('2d');
     hg.fillStyle = 'rgb(64,64,64)'; hg.fillRect(0, 0, h, h);
-    // the raised round centre (user: "가운데 있던 볼륨 원은 있는게 좋은데") — a soft rise, no sunken groove round it (that groove
-    // read as a dark ring along the top)
-    hg.filter = 'blur(5px)'; hg.fillStyle = 'rgb(150,150,150)'; hg.beginPath(); hg.arc(hR, hR, hR * 0.84, 0, 2 * PI); hg.fill();
+    // the carved centre as before (user: "가운데 파인느낌은 이전꺼가 나은데"): a groove pressed round a raised centre — only
+    // the dark PAINTED ring is gone, and the lid's edge stays flush (the bead standing above it made the dark top line)
+    hg.filter = 'blur(5px)';
+    hg.fillStyle = 'rgb(12,12,12)'; hg.beginPath(); hg.arc(hR, hR, hR * 0.925, 0, 2 * PI); hg.fill();
+    hg.fillStyle = 'rgb(90,90,90)'; hg.beginPath(); hg.arc(hR, hR, hR * 0.875, 0, 2 * PI); hg.fill();
     hg.filter = 'blur(2px)'; hg.globalCompositeOperation = 'lighter';
     hg.fillStyle = 'rgb(55,55,55)'; stars(hg, h);
     hg.filter = 'blur(6px)'; hg.globalAlpha = 0.75; words(hg, h, 'rgb(255,255,255)');
