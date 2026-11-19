@@ -1,7 +1,8 @@
 /* Eye Catch — microphone. Opened once at START (permission asked then) and kept running, with a 1 s ring buffer:
  * a child often shouts the word WHILE hitting the button, so a listen started by the button also gets the last
- * 0.7 s before it. One utterance is kept in memory, handed to the on-device recogniser (js/stt.js) and dropped —
- * nothing is recorded to disk or sent anywhere. Energy voice detector like Phonics Match's (core/mic.ts).
+ * 0.7 s before it. One utterance is kept in memory, judged and dropped — nothing is recorded to disk. With a phonics-api
+ * key on the device it is sent once to the company server (js/phonics-api.js; the server does not store audio),
+ * otherwise only the on-device recogniser (js/stt.js) hears it. Energy voice detector like Phonics Match's (core/mic.ts).
  */
 (function () {
   'use strict';

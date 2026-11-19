@@ -243,6 +243,21 @@
   // ── a round ───────────────────────────────────────────────────────────────────────────────────────────
   const answer = () => G.deck.answers[G.r];
   function rivals() { const a = answer(); return [...new Set([...G.left.words, ...G.right.words])].filter(w => w !== a); }
+  // the spoken word: the company phonics-api first (a teacher's key on this device; js/phonics-api.js compares the
+  // phonemes it heard with every picture on the table), the on-device recogniser when it can't answer
+  const PH = Object.fromEntries(window.EC_WORDS.words.map(w => [w.w, w.ph]));
+  async function judgeSpeech(pcm16k) {
+    if (window.PhonicsAPI && PhonicsAPI.usable()) {
+      const r = await PhonicsAPI.analyze(PhonicsAPI.encodeWav(pcm16k, 16000), answer());
+      if (r.ok) {
+        const j = PhonicsAPI.judge(r.data, answer(), rivals(), PH);
+        STT.last = { by: 'phonics-api', target: answer(), ms: r.ms, verdict: j.verdict, heard: j.heard, d: j.d };
+        return j.verdict === 'silence' ? 'unclear' : j.verdict;
+      }
+      if (Q.has('log')) console.log('phonics-api failed -> on-device', r.reason, r.status || '');
+    }
+    return STT.judge(pcm16k, answer(), rivals());
+  }
   function round(tok) {
     G.phase = 'race'; G.locked = [false, false];
     resetBuzzers();
@@ -279,7 +294,7 @@
 
   /** 'ok' | 'wrong' */
   async function answerTurn(p, tok) {
-    const useMic = !Q.has('tap') && (Q.has('fake') || (Mic.state === 'on' && STT.state !== 'error'));
+    const useMic = !Q.has('tap') && (Q.has('fake') || (Mic.state === 'on' && (STT.state !== 'error' || PhonicsAPI.usable())));
     if (!useMic) return tapTurn(p, tok);
     for (let t = 0; t < 2; t++) {
       setBuzz(p, 'listen', true);
@@ -294,7 +309,7 @@
         else if (r.kind === 'speech') {
           setBuzz(p, 'listen', false); setBuzz(p, 'thinking', true);
           const pcm = await Mic.prepare(r.pcm, r.sr);
-          verdict = await STT.judge(pcm, answer(), rivals());
+          verdict = await judgeSpeech(pcm);
           setBuzz(p, 'thinking', false);
           if (verdict === null) return tapTurn(p, tok);
           if (Q.has('log')) console.log('heard', STT.last);
@@ -471,6 +486,11 @@
   const showLang = () => lang.querySelectorAll('span').forEach(s => s.classList.toggle('on', s.dataset.l === S.lang));
   lang.addEventListener('click', () => { S.setLang(S.lang === 'ko' ? 'en' : 'ko'); showLang(); S.sfx('tap'); if (G.screen === 'title') { S.stopVoice(); S.say('t:pressstart'); } });
   showLang();
+  // phonics-api key (title only): a teacher enters it once per device; the dot shows who judges the words
+  const keyBtn = $('#btnKey');
+  const showApi = () => { keyBtn.dataset.api = PhonicsAPI.status(); };
+  addEventListener('phonicsapi:status', showApi);
+  keyBtn.addEventListener('click', async () => { S.sfx('tap'); await PhonicsAPI.keyDialog(); showApi(); });
 
   // ── boot ──────────────────────────────────────────────────────────────────────────────────────────────
   M3.init($('#gl'));
@@ -479,6 +499,7 @@
   showTitle();
   requestAnimationFrame(tick);
   if (Q.has('tap')) Mic.state = 'none';
-  window.__ec = { G, buzz, startGame, showTitle, fake, mon, M3, wait, held };
+  PhonicsAPI.init().then(showApi);
+  window.__ec = { G, buzz, startGame, showTitle, fake, mon, M3, wait, held, judgeSpeech };
   window.__ready = true;
 })();

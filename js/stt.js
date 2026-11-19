@@ -1,4 +1,5 @@
-/* Eye Catch — on-device speech recognition (whisper tiny.en on ONNX Runtime WASM in a worker).
+/* Eye Catch — on-device speech recognition (whisper tiny.en on ONNX Runtime WASM in a worker): the BACKUP judge.
+ * The company phonics-api judges first when this device has a key (js/phonics-api.js, game.js judgeSpeech).
  * The worker is Phonics Match's built sttWorker (js/stt-worker.js; source: Phonics-Match src/core/sttWorker.ts +
  * sttCheck.ts): it loads the model from ./stt/models and the runtime from ./stt/ort — nothing comes from outside and
  * the child's audio never leaves the page. Needs http(s): from file:// there is no worker, and the game lets the

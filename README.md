@@ -1,8 +1,17 @@
 # Eye Catch (아이캐치) — 파닉스 그림 찾기 2인 게임
 
 두 장의 카드에 **딱 하나** 같은 그림이 있다. 먼저 찾은 친구가 **자기 버튼을 누르고 단어를 말하면** 튜터(눈 하나 외계인)가
-기기 안 음성인식으로 확인하고, 맞으면 왼쪽 카드를 가져간다. 틀리면 상대에게 기회. 10장, 많이 가진 친구가 승리.
-단어·그림: FPR K Unit 1 Lesson 1 (Mm) 12단어 — man map meat milk mirror mitt monkey moon mop mouse mug mushroom.
+회사 phonics-api(키가 있을 때) 또는 기기 안 음성인식으로 확인하고, 맞으면 왼쪽 카드를 가져간다. 틀리면 상대에게 기회.
+10장, 많이 가진 친구가 승리.
+단어·그림·단어 음성: lesson pack `FP.K.U1L1`(공통자료) 12단어 — man map meat milk mirror mitt monkey moon mop mouse mug mushroom.
+
+## 발음 판정 = phonics-api (파닉스 공통 규칙, 2026-11-19)
+- 타이틀 왼쪽 위 열쇠 버튼 → 키 입력(기기마다 한 번, `localStorage.phonics_api_key`). 점: 민트 = 회사 서버가 판정, 모래색 = 기기 안 판정.
+  키는 코드·저장소에 넣지 않는다(공개 repo). 팀 키 원문은 파닉스 채널 공유본.
+- 말한 소리 → `POST /v1/speech/analyze`(사내 서버, 녹음 저장 안 함) → 들린 소리열을 테이블 위 그림들의 기대 소리열과 비교
+  (`PhonicsAPI.judge`, phonics-kit). 서버의 `success`는 쓰지 않는다(moon을 mop으로 물어도 통과시킴).
+- ih/iy는 같은 소리로 본다: 서버가 공식 mitt 녹음도 `m iy t`로 들어서 meat·mitt는 서로 통과한다.
+- 키 없음 · 오프라인 · 서버 혼잡 · 6초 초과 → 그 차례는 기기 안 whisper(아래). 실패하면 1분(혼잡이면 15초) 동안 서버를 건너뛴다.
 
 ## 실행
 - `실행.command` 더블클릭 (또는 `python3 tools/serve.py 5261` → http://127.0.0.1:5261/). 크롬 권장.
@@ -21,22 +30,25 @@
 | `js/tin3d.js` | 타이틀의 분홍 EYE CATCH 카드통(3D, 목업 기준): 옆면 EYE CATCH와 뚜껑의 로고·별·안쪽 단은 높이맵으로 정점을 밀어 올린 실제 입체(bump 아님), 말린 테두리 lathe, 깊은 뚜껑 옆띠, 안쪽 카드 더미 + 실제 카드. 폰트·로고 로드 후 1회 생성 |
 | `js/sdf.js` | SDF + Surface Nets 메셔 (Croco Phonics) |
 | `js/mic.js` | 마이크(시작 때 1회 권한), 버튼 누르기 0.7초 전부터 듣는 링버퍼, 음성 구간 검출, 16 kHz 변환 |
-| `js/stt.js` + `js/stt-worker.js` + `stt/` | 기기 안 whisper tiny.en (Phonics Match 워커 재사용). 화면의 12그림 중 정답이 가장 잘 맞아야 통과 |
+| `js/phonics-api.js` | phonics-kit 사본(고치지 말고 kit을 고친 뒤 다시 복사): 키·서버 상태·analyze·판정·키 입력 창 |
+| `js/stt.js` + `js/stt-worker.js` + `stt/` | 백업 판정: 기기 안 whisper tiny.en (Phonics Match 워커 재사용). 화면의 12그림 중 정답이 가장 잘 맞아야 통과 |
 | `js/audio.js` | 튜터 음성(base64), 효과음 합성, 배경음악, 입모양용 음량 |
 
 ## 생성물 (손으로 고치지 말 것)
-- `js/words.js`, `js/cards-art.js`, `assets/cards/*` ← `uv run --with pillow python tools/build_cards.py` (Constella 공식 일러스트, map은 한 장짜리 `_2`)
+- `js/words.js`, `js/cards-art.js`, `assets/cards/*` ← `uv run --with pillow python tools/build_cards.py`
+  (lesson pack 그림 = 대표이미지, 알파 경계로 자름 — moon은 원본이 남색 정사각 하늘이라 사각으로 남는다. `ph` = 서버 G2P 기대 소리열)
 - `js/art.js`, `assets/img/*` ← `tools/cut_sprites.py`(목업에서 START·match!·아바타 컷) → `tools/build_art.py` (배경·로고 = 사용자 파일 `design/eyecatch_bg.png`, `eyecatch_logo.png`)
 - `js/voice.js`, `js/voice-data.js`, `assets/voice/*` ← `zsh -ic '/Users/jini/.local/bin/uv run --with numpy python tools/build_voice.py'`
-  - 단어: 공식 녹음 우선(FPR K 교재 man map milk mug / Constella meat monkey moon mop mouse). mirror·mitt·mushroom은 공식 녹음이 없어 Magic Block의 사내 TTS(aiden) 클립.
+  - 단어·/m/ 음가: lesson pack 음성(mirror·mitt·mushroom은 pack의 WAV, 나머지 공식 MP3).
   - 튜터 대사 EN/KO 23쌍: 사내 TTS `qwen-tts` aiden (회사망/VPN). 되읽기 검사: `~/.claude/skills/video-vision/.venv/bin/python tools/voice_check.py`
 - `js/bgm-data.js`, `assets/audio/bgm.mp3` ← `uv run --with numpy --with scipy python tools/make_bgm.py` (자체 합성, D장조 112 BPM)
 
 ## QA (headless, Playwright 1.62)
 - `uv run --with playwright==1.62.0 python tools/qa/flow.py <out> [W H]` — 10라운드 전체 + 기회 넘김 + 아무도 못 맞힌 라운드 + 결과/다시하기/홈
 - `uv run --with playwright==1.62.0 python tools/qa/stt_check.py` — 12단어 녹음 × 12정답 판정표 (대각선만 OK여야 함) + 단어가 아닌 소리
-- `uv run --with playwright==1.62.0 python tools/qa/say_flow.py dev/say/moon.wav moon ok` — 마이크 경로 전체(getUserMedia만 WAV 재생 스트림으로 대체:
-  에이전트에서 띄운 헤드리스 크롬은 macOS 개인정보 보호 때문에 가짜 장치도 못 연다)
+- `uv run --with playwright==1.62.0 python tools/qa/say_flow.py dev/say/moon.wav moon ok [api|device]` — 마이크 경로 전체(getUserMedia만 WAV 재생 스트림으로 대체:
+  에이전트에서 띄운 헤드리스 크롬은 macOS 개인정보 보호 때문에 가짜 장치도 못 연다). api = `~/.config/phonics-api/key`를 이 브라우저에 넣음, device = 키 없이 whisper
+- `node ../phonics-kit/tools/qa_judge.mjs` — phonics-api 판정 규칙: 12단어 × (pack 녹음 + TTS 4목소리) + 단어가 아닌 소리
 - `uv run --with playwright==1.62.0 --with pillow python tools/qa/monster_cmp.py <out> "pose=hold"` — 3D 튜터 vs 목업 나란히
 
 ## 주의

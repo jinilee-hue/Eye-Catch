@@ -1,10 +1,8 @@
 """Voice clips for Eye Catch -> assets/voice/*.mp3 + js/voice.js + js/voice-data.js (base64, so file:// plays too)
 
-- WORDS (FPR K Unit 1 Lesson 1, js/words.js): the official recordings first —
-  Phonics Island's FPR manifest (`word:<w>`: textbook L1 files + Constella), then the approved Constella set
-  (fpr_assets/audio/낱말/자산_승인*/p-NOUN_<w>_pronunciation.mp3). A word with no official recording anywhere
-  (mirror, mitt, mushroom) takes Magic Block's clip: the same company-TTS boy voice as the tutor.
-- LETTER SOUND /m/: the official FPR K recording (Phonics Match's trimmed copy).
+- WORDS (FPR K Unit 1 Lesson 1, js/words.js) and the LETTER SOUND /m/: the lesson pack's own audio
+  (Phonics/공통자료/FP.K.U1L1-lesson-pack via phonics-kit/tools/lessonpack.py — the content team's files; the pack has
+  mirror/mitt/mushroom as WAV takes, the rest as official MP3s).
 - TUTOR LINES (EN + KO): company TTS (Qwen3 'aiden', cheerful 7-year-old boy — the voice the user picked for the
   phonics games). Company network / VPN only; TTS_BASE_URL + LLM_API_KEY come from ~/.zshrc and are never printed.
   Raw takes are cached in ~/.cache/eye-catch/voice_qwen (md5 of voice + instruction + text + lang).
@@ -12,17 +10,16 @@
 Every clip is trimmed and levelled; {key: [file, start s, gain, dur s]} is applied at playback.
 Run: zsh -ic '/Users/jini/.local/bin/uv run --with numpy python tools/build_voice.py'
 """
-import base64, hashlib, json, os, pathlib, shutil, subprocess, tempfile, time, urllib.request
+import base64, hashlib, json, os, pathlib, subprocess, sys, tempfile, time, urllib.request
 import numpy as np
+sys.path.insert(0, str(pathlib.Path.home() / 'Documents/Jini/2026/Phonics/phonics-kit/tools'))
+import lessonpack  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 PH = pathlib.Path.home() / 'Documents/Jini/2026/Phonics'
 OUT = ROOT / 'assets' / 'voice'
 CACHE = pathlib.Path.home() / '.cache' / 'eye-catch' / 'voice_qwen'
-ISLAND = PH / 'Phonics_island/phonics-island-3d/public'
-CONSTELLA = PH / 'Phonics_island/fpr_assets/audio/낱말'
-JENGA = PH / 'Phonics-Jenga'
-MATCH = PH / 'Phonics-Match'
+TB = 'FP.K.U1L1'
 SR = 24000
 QWEN_URL, QWEN_KEY = os.environ.get('TTS_BASE_URL', '').rstrip('/'), os.environ.get('LLM_API_KEY', '')
 VOICE = 'aiden'
@@ -148,38 +145,20 @@ def qwen(text, ins, dst, lang):
             time.sleep(4 + 3 * attempt)
 
 
-def official_word(w):
-    fpr = json.loads((ISLAND / 'fpr/manifest.json').read_text())['clips']
-    if f'word:{w}' in fpr:
-        return ISLAND / fpr[f'word:{w}'], 'FPR K' if 'Unit_' in fpr[f'word:{w}'] else 'Constella'
-    hits = sorted(CONSTELLA.glob(f'자산_승인*/p-NOUN_{w}_pronunciation.mp3'))
-    if hits:
-        return hits[0], 'Constella'
-    return None, None
-
-
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     CACHE.mkdir(parents=True, exist_ok=True)
     for f in OUT.glob('*.mp3'):
         f.unlink()
     clips, lines, lines_ko, source = {}, {}, {}, {}
-    jv = json.loads((JENGA / 'src/data/voice.json').read_text(encoding='utf-8'))
+    pk = lessonpack.load(lessonpack.pack_dir(TB))
     for w in WORDS:
-        src, kind = official_word(w)
+        e = pk['words'][w]
         dst = OUT / f'w_{w}.mp3'
-        if src:
-            clips[f'w:{w}'] = [dst.name, *trim(src, dst, target_db=-18, floor_db=-40)]
-            source[w] = kind
-        else:  # Magic Block's take (company TTS, the tutor's own voice)
-            e = jv['clips'][f'w:{w}']
-            shutil.copy2(JENGA / 'public/voice' / e[0], dst)
-            clips[f'w:{w}'] = [dst.name, *e[1:]]
-            source[w] = 'company TTS (Magic Block)'
-    mv = json.loads((MATCH / 'src/data/voice.json').read_text(encoding='utf-8'))
-    e = mv['clips']['s:m']
-    shutil.copy2(MATCH / 'public/voice' / e[0], OUT / 's_m.mp3')
-    clips['s:m'] = ['s_m.mp3', *e[1:]]
+        clips[f'w:{w}'] = [dst.name, *trim(e['audio'], dst, target_db=-18, floor_db=-40)]
+        source[w] = f"{TB} pack ({pathlib.Path(e['audio']).suffix[1:]})"
+    snd = pk['sound']
+    clips['s:' + snd['text']] = [f"s_{snd['text']}.mp3", *trim(snd['audio'], OUT / f"s_{snd['text']}.mp3", target_db=-18, floor_db=-40)]
     missing = []
     for pre, table, lang, out in (('t', LINES, 'en', lines), ('k', LINES_KO, 'ko', lines_ko)):
         for k, text in table.items():

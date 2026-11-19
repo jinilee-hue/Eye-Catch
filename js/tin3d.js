@@ -91,7 +91,7 @@
     }
   }
   function buildLidFace() {
-    const N = 1024, R = N / 2, LOGO_W = N * 0.74, ROT = -0.1;     // CATCH spans ~3/4 of the lid, like the mockup
+    const N = 1024, R = N / 2, LOGO_W = N * 0.62;     // the two-line logo, straight, inside the lid
     // colour
     const cc = canvas(N, N), g = cc.getContext('2d');
     const gr = g.createRadialGradient(R * 0.75, R * 0.6, R * 0.1, R, R, R);
@@ -101,7 +101,7 @@
     g.fillStyle = css('--tin-star'); stars(g, N);
     // the logo, a little washed into pastel (the mockup's lid letters are lighter than the title logo)
     const lc = canvas(N, N), lg = lc.getContext('2d');
-    Card3D.drawLogo2(lg, R, R + N * 0.02, LOGO_W, ROT);
+    Card3D.drawLogo2(lg, R, R, LOGO_W);
     lg.globalCompositeOperation = 'source-atop'; lg.fillStyle = css('--tin-wash'); lg.fillRect(0, 0, N, N);
     g.drawImage(lc, 0, 0);
     // height: rim, groove, raised plateau, + stars, + the logo's letters
@@ -112,7 +112,7 @@
     hg.fillStyle = 'rgb(90,90,90)'; hg.beginPath(); hg.arc(hR, hR, hR * 0.875, 0, 2 * PI); hg.fill();
     hg.filter = 'blur(2px)'; hg.globalCompositeOperation = 'lighter';
     hg.fillStyle = 'rgb(55,55,55)'; stars(hg, h);
-    const logo = silhouette(h, h, (sg) => Card3D.drawLogo2(sg, hR, hR + h * 0.02, LOGO_W / 2, ROT));
+    const logo = silhouette(h, h, (sg) => Card3D.drawLogo2(sg, hR, hR, LOGO_W / 2));
     hg.filter = 'blur(4px)'; hg.globalAlpha = 0.62; hg.drawImage(logo, 0, 0);
     hg.globalAlpha = 1; hg.filter = 'none'; hg.globalCompositeOperation = 'source-over';
     const hs = sampler(hc);

@@ -48,7 +48,6 @@
   --spark-4: #bfeaff;
   --label: #4e4a5a;
   --locked-filter: grayscale(1) brightness(1.06) contrast(.82);
-  --logo-sat: 1.3;        /* the logo a little more saturated than the file (user: "채도 조금 높여줘") */
   --btn-top: #ffbe63;
   --btn-mid: #fb9545;
   --btn-bot: #ef6a2c;
@@ -89,6 +88,7 @@
   --orange-deep: #f0612a;
   --pink: #ff5fa2;
   --mint: #7fd8b8;
+  --api-off: #cdbba8;
   --shade: rgba(60, 30, 20, 0.18);
   --white-a60: rgba(255, 255, 255, 0.6);
   --white-a30: rgba(255, 255, 255, 0.3);
@@ -113,7 +113,7 @@ img { -webkit-user-drag: none; user-select: none; }
 #stage[data-screen="title"] .game-el, #stage[data-screen="game"] .title-el { display: none !important; }
 
 /* ── title ─────────────────────────────────────────────────────────────── */
-.logo { position: absolute; left: 360px; top: 62px; width: 1680px;   /* ~85 % (user: "로고 조금 줄여줘"), centred */ transform-origin: 50% 70%; filter: saturate(var(--logo-sat)); }
+.logo { position: absolute; left: 860px; top: 36px; width: 680px;   /* two lines, centred, clear of the tutor's horns */ transform-origin: 50% 70%; }
 .logo.drop { animation: logoDrop 1.1s cubic-bezier(.2, 1.4, .4, 1) both; }
 .logo.float { animation: logoFloat 4.2s ease-in-out infinite; }
 @keyframes logoDrop { 0% { transform: translateY(-520px) scale(.6) rotate(-6deg); opacity: 0; } 55% { opacity: 1; transform: translateY(18px) scale(1.04, .94); } 75% { transform: translateY(-10px) scale(.98, 1.03); } 100% { transform: none; } }
@@ -192,8 +192,9 @@ img { -webkit-user-drag: none; user-select: none; }
 .buzzer.thinking .mic { opacity: 1; transform: scale(1); animation: think 0.8s linear infinite; }
 @keyframes think { 50% { transform: scale(.9); } }
 
-/* the game screen's logo: small, top centre (user); the system buttons stay top right as on the title */
-.game-logo { position: absolute; left: 50%; top: calc(34px - var(--ey)); width: 760px; transform: translateX(-50%); pointer-events: none; filter: saturate(var(--logo-sat)) drop-shadow(0 8px 10px var(--cream-shadow)); }
+/* the game screen's logo: EYE over CATCH, centred, letters clear of each other.
+   saturation is baked into logo-game.webp */
+.game-logo { position: absolute; left: 50%; top: calc(64px - var(--ey)); width: 340px; transform: translateX(-50%); pointer-events: none; filter: drop-shadow(0 8px 10px var(--cream-shadow)); }
 
 /* the word, big, after a match: bottom centre between the two pads (the tutor stands under the logo) */
 .wordpop { position: absolute; left: 50%; top: calc(1560px + var(--ey)); transform: translateX(-50%); padding: 6px 70px 0; height: 150px; border-radius: 75px; background: var(--cream); border: 10px solid var(--cream-2);
@@ -207,6 +208,13 @@ img { -webkit-user-drag: none; user-select: none; }
 /* ── system buttons ────────────────────────────────────────────────────── */
 .sys { position: absolute; right: calc(60px - var(--ex)); top: calc(46px - var(--ey)); display: flex; gap: 40px; }
 #stage[data-screen="game"] #btnLang { display: none; }   /* the language is chosen on the title only (user) */
+/* phonics-api key (title only): a teacher enters it once per device; the dot = mint when the company server judges
+   the words, sand when the on-device recogniser does (no key / offline) */
+#stage[data-screen="game"] #btnKey { display: none; }
+.sys.sys-left { right: auto; left: calc(60px - var(--ex)); }   /* away from the logo and the kids' buttons */
+#btnKey .dot { position: absolute; right: 6px; top: 6px; width: 30px; height: 30px; border-radius: 50%; background: var(--api-off);
+  box-shadow: 0 0 0 6px var(--btn-ring), 0 3px 0 6px var(--btn-edge-deep); transition: background .2s; }
+#btnKey[data-api="on"] .dot { background: var(--mint); }
 /* the system buttons wear the START button's look (user: "스타트 버튼처럼 느낌 비슷하게 이질감 없이"): an orange candy body,
    a cream ring, a tan outer edge with a darker bottom (depth), a glossy top, cream icons/letters with an orange shadow */
 .sys-btn { width: 128px; height: 128px; border-radius: 50%; display: grid; place-items: center; position: relative;

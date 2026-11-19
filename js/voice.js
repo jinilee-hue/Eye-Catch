@@ -11,7 +11,7 @@ window.EC_VOICE = {
 "w:map": [
 "w_map.mp3",
 0.43,
-0.576,
+0.484,
 0.97
 ],
 "w:meat": [
@@ -28,15 +28,15 @@ window.EC_VOICE = {
 ],
 "w:mirror": [
 "w_mirror.mp3",
-0.02,
-0.629,
-0.844
+0.0,
+0.933,
+0.82
 ],
 "w:mitt": [
 "w_mitt.mp3",
-0.02,
-0.706,
-0.676
+0.52,
+0.817,
+0.83
 ],
 "w:monkey": [
 "w_monkey.mp3",
@@ -65,20 +65,20 @@ window.EC_VOICE = {
 "w:mug": [
 "w_mug.mp3",
 0.42,
-0.415,
-1.04
+0.432,
+1.03
 ],
 "w:mushroom": [
 "w_mushroom.mp3",
-0.03,
-2.239,
-1.074
+0.07,
+1.562,
+1.38
 ],
 "s:m": [
 "s_m.mp3",
 0.42,
-0.485,
-1.121
+0.51,
+1.12
 ],
 "t:hello": [
 "t_hello.mp3",
@@ -408,17 +408,17 @@ window.EC_VOICE = {
 "pressstart": "시작 버튼을 눌러 봐!"
 },
 "wordSource": {
-"man": "FPR K",
-"map": "FPR K",
-"meat": "Constella",
-"milk": "FPR K",
-"mirror": "company TTS (Magic Block)",
-"mitt": "company TTS (Magic Block)",
-"monkey": "Constella",
-"moon": "Constella",
-"mop": "Constella",
-"mouse": "Constella",
-"mug": "FPR K",
-"mushroom": "company TTS (Magic Block)"
+"man": "FP.K.U1L1 pack (mp3)",
+"map": "FP.K.U1L1 pack (mp3)",
+"meat": "FP.K.U1L1 pack (mp3)",
+"milk": "FP.K.U1L1 pack (mp3)",
+"mirror": "FP.K.U1L1 pack (wav)",
+"mitt": "FP.K.U1L1 pack (wav)",
+"monkey": "FP.K.U1L1 pack (mp3)",
+"moon": "FP.K.U1L1 pack (mp3)",
+"mop": "FP.K.U1L1 pack (mp3)",
+"mouse": "FP.K.U1L1 pack (mp3)",
+"mug": "FP.K.U1L1 pack (mp3)",
+"mushroom": "FP.K.U1L1 pack (wav)"
 }
 };

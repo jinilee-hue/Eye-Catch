@@ -52,17 +52,15 @@
     plain: { rim: '--card', hi: '--card', deep: '--card-edge', halo: '' },
   };
   const backTex = {};
-  // the logo, two lines (EYE over CATCH, like the tin's lid): the card back's centre and the tin's lid
+  // the two-line logo (EYE over CATCH, level): the card back's centre and the tin's lid
   const LOGO = new Image();
   const logoReady = new Promise(res => { LOGO.onload = res; LOGO.onerror = res; });
-  LOGO.src = window.EC_LOGO_DATA || 'assets/img/logo.webp';
+  LOGO.src = window.EC_LOGO_DATA || 'assets/img/logo-game.webp';
   function drawLogo2(g, cx, cy, width, rot = 0, alpha = 1) {
     if (!LOGO.naturalWidth) return;
-    const iw = LOGO.naturalWidth, ih = LOGO.naturalHeight, cut = 0.385;
-    const k = width / ((1 - cut) * iw), ew = cut * iw * k, cw = (1 - cut) * iw * k, h = ih * k;
+    const h = width * LOGO.naturalHeight / LOGO.naturalWidth;
     g.save(); g.translate(cx, cy); g.rotate(rot); g.globalAlpha = alpha;
-    g.drawImage(LOGO, 0, 0, cut * iw, ih, -ew / 2, -h * 0.9, ew, h);
-    g.drawImage(LOGO, cut * iw, 0, (1 - cut) * iw, ih, -cw / 2, -h * 0.16, cw, h);
+    g.drawImage(LOGO, -width / 2, -h / 2, width, h);
     g.restore();
   }
   // the card back (user: "카드 뒷면처럼 안생겼어 숫자가 들어가서 그런가봐"): sunburst + a cream medallion with the logo
@@ -78,7 +76,7 @@
       }
       g.beginPath(); g.arc(512, 512, 300, 0, 2 * PI); g.fillStyle = css('--cream'); g.fill();
       g.lineWidth = 22; g.strokeStyle = css(st.deep); g.stroke();
-      drawLogo2(g, 512, 512, 440, -0.06);
+      drawLogo2(g, 512, 512, 440);
     };
     paint();
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
