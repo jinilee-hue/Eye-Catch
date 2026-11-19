@@ -194,8 +194,11 @@
     // the lid: face (relief) + a deep side band with rolled edges + a pale inside
     const LR = 0.9, DEPTH = 0.16;                     // in front of the tin it looks bigger: a little smaller than the tin
     const lid = new THREE.Group();
-    const face = buildLidFace(); face.scale.setScalar(LR * 0.985); lid.add(face);
-    const band = lathe([...arc(LR - 0.02, -0.005, 0.06, PI * 0.5, 0, 12), [LR + 0.04, -0.06], [LR + 0.04, -DEPTH + 0.05], ...arc(LR - 0.005, -DEPTH + 0.05, 0.045, 0, -PI * 0.9, 12)], pink(), 200);
+    // the lid's top is flush: the edge rolls DOWN from the face's own level (the face's flat area sits at z 0.028) — a bead
+    // standing above it showed its shaded inner slope as a dark ring along the top (user: "위쪽 … 그림자가 안으로 들어간")
+    const FZ = 0.028;
+    const face = buildLidFace(); face.scale.setScalar(LR - 0.05); lid.add(face);
+    const band = lathe([[LR - 0.06, FZ], ...arc(LR - 0.05, FZ - 0.05, 0.05, PI * 0.5, 0, 14), [LR, -0.06], [LR, -DEPTH + 0.05], ...arc(LR - 0.04, -DEPTH + 0.05, 0.04, 0, -PI * 0.9, 12)], pink(), 200);
     band.rotation.x = PI / 2; lid.add(band);
     const lidIn = new THREE.Mesh(new THREE.CircleGeometry(LR, 120), new THREE.MeshStandardMaterial({ color: css('--tin-in'), roughness: 0.45, metalness: 0 }));
     lidIn.rotation.y = PI; lidIn.position.z = -0.02; lid.add(lidIn);
