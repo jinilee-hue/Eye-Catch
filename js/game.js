@@ -351,12 +351,8 @@
     cards.forEach(c => {
       if (!c) return;
       c.hit(w, true);
-      // the "match!" tag sits on the card's top rim, upright (like the mockup), so it never covers a picture
-      const top = c.topScreen(), sp = c.symScreen(w);
-      const tag = document.createElement('img'); tag.className = 'match-tag'; tag.alt = '';
-      tag.src = c.style === 'sky' || c.style === 'pink' ? `assets/img/match-${c.style}.webp` : 'assets/img/match.webp';   // the card's colour
-      tag.style.left = top.x + 'px'; tag.style.top = (top.y + 40) + 'px';
-      $('#fx').appendChild(tag);
+      // no "match!" tag over the cards any more (user: "match 그냥 빼자 위치가 안맞아") — the glow + sparkles show it
+      const sp = c.symScreen(w);
       if (sp) FX.sparkles(sp.x, sp.y, 16, 240);
     });
     S.sfx('right');
