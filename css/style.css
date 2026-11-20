@@ -252,7 +252,7 @@ img { -webkit-user-drag: none; user-select: none; }
 
 /* the game screen's logo: EYE over CATCH, centred, letters clear of each other.
    saturation is baked into logo-game.webp */
-.game-logo { position: absolute; left: 50%; top: calc(30px - var(--ey)); width: 520px;   /* bigger (user) */ transform: translateX(-50%); pointer-events: none; filter: drop-shadow(0 8px 10px var(--cream-shadow)); }
+.game-logo { position: absolute; left: 50%; top: calc(84px - var(--ey)); width: 520px;   /* bigger (user); a little lower (user: "게임화면에서는 로고 밑으로 조금 내려줘") */ transform: translateX(-50%); pointer-events: none; filter: drop-shadow(0 8px 10px var(--cream-shadow)); }
 
 /* the word, big, after a match: under the small logo, above the cards (the tutor stands at the bottom) */
 .wordpop { position: absolute; left: 50%; top: 900px; z-index: 3; opacity: 0; pointer-events: none; transform: translate(-50%, -50%); }
