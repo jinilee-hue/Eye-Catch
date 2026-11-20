@@ -7,7 +7,7 @@ uv run --with pillow --with numpy python tools/build_art.py
 """
 import json, pathlib, sys
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from art_boxes import JOBS  # noqa: E402
@@ -136,6 +136,60 @@ def game_logo(im, letter_sat=1.75):
     return im
 
 
+def _srgb_to_lab(rgb):
+    c = rgb / 255.0
+    c = np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4)
+    m = np.array([[0.4124, 0.3576, 0.1805], [0.2126, 0.7152, 0.0722], [0.0193, 0.1192, 0.9505]])
+    xyz = c @ m.T / np.array([0.95047, 1.0, 1.08883])
+    f = np.where(xyz > 216 / 24389, np.cbrt(xyz), (24389 / 27 * xyz + 16) / 116)
+    return np.stack([116 * f[..., 1] - 16, 500 * (f[..., 0] - f[..., 1]), 200 * (f[..., 1] - f[..., 2])], -1)
+
+
+def _lab_to_srgb(lab):
+    fy = (lab[..., 0] + 16) / 116
+    f = np.stack([fy + lab[..., 1] / 500, fy, fy - lab[..., 2] / 200], -1)
+    xyz = np.where(f ** 3 > 216 / 24389, f ** 3, (116 * f - 16) / (24389 / 27)) * np.array([0.95047, 1.0, 1.08883])
+    mi = np.array([[3.2406, -1.5372, -0.4986], [-0.9689, 1.8758, 0.0415], [0.0557, -0.2040, 1.0570]])
+    c = xyz @ mi.T
+    c = np.where(c <= 0.0031308, 12.92 * c, 1.055 * np.clip(c, 0, None) ** (1 / 2.4) - 0.055)
+    return np.clip(c * 255, 0, 255)
+
+
+# the red letters that turn purple (user: "로고가 붉은색이 많은데..보라색도 섞어서"): the first E and the H, seeded
+# inside each letter's fill on logo-game (x, y) with that fill's own hue (CIELAB degrees). Re-check the seeds if the
+# source logo changes.
+PURPLE = {'seeds': [((350, 300), 35), ((985, 700), 20)], 'hue': 312}
+
+
+def purple_letters(im):
+    """Turn the chosen letters purple, keeping their light and shade (a CIELAB hue turn).
+
+    A letter's fill is the red region joined to its seed; the light peach outline round it
+    (hue ~65) stops the region, so the orange outline and its 3D side keep their colour.
+    """
+    a = np.asarray(im.convert('RGBA')).astype(np.float64)
+    lab = _srgb_to_lab(a[..., :3])
+    hue = (np.degrees(np.arctan2(lab[..., 2], lab[..., 1])) + 360) % 360
+    hh = np.where(hue > 300, hue - 360, hue)                   # crimson and pink wrap round to just below 0
+    red = (a[..., 3] > 8) & (hh < 58) & (hh > -60)
+    chroma = np.hypot(lab[..., 1], lab[..., 2])
+    out = lab.copy()
+    for (x, y), base in PURPLE['seeds']:
+        fill = _blob(red, (y, x))
+        # the shaded bevel just inside the outline (hue up to ~62) belongs to the letter too: take a few px round the
+        # region, fade out toward the outline's hue, and soften the weights so the edge has no speckle
+        w = np.where(_grow(fill, 4), np.clip((64 - hh) / 8, 0, 1), 0)
+        w = np.asarray(Image.fromarray(np.uint8(np.round(w * 255))).filter(ImageFilter.GaussianBlur(1.5))) / 255.0
+        # the fill's reds span ~40 degrees; squeeze them into a narrow purple band so the deep edge stays purple
+        # instead of swinging to hot magenta, and cap the chroma there
+        nh = np.radians(PURPLE['hue'] + (hh - base) * 0.35)
+        nc = np.minimum(chroma, 72)
+        out[..., 1] += (nc * np.cos(nh) - lab[..., 1]) * w
+        out[..., 2] += (nc * np.sin(nh) - lab[..., 2]) * w
+    a[..., :3] = _lab_to_srgb(out)
+    return Image.fromarray(np.clip(np.round(a), 0, 255).astype(np.uint8), 'RGBA')
+
+
 def level(arr):
     """Rotate a cut word so its letters sit on a horizontal line."""
     al = arr[:, :, 3] > 40
@@ -186,7 +240,7 @@ logo, _ = trim(Image.open(D / 'eyecatch_logo.png').convert('RGBA'))
 logo.save(IMG / 'logo.webp', quality=92, method=6)
 ART['logo'] = {'w': logo.width, 'h': logo.height}
 # the title, the game screen, the card backs and the tin lid all wear this stacked logo
-glogo = game_logo(Image.open(D / 'eyecatch_logo.png'))
+glogo = purple_letters(game_logo(Image.open(D / 'eyecatch_logo.png')))
 glogo.save(IMG / 'logo-game.webp', quality=92, method=6)
 ART['logoGame'] = {'w': glogo.width, 'h': glogo.height}
 # a small copy as a data URL: the 3D tin lid and the card backs (file:// can't use image FILES as WebGL textures)

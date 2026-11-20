@@ -102,7 +102,7 @@
     G.tok++; G.screen = 'title'; G.phase = 'idle';
     stage.dataset.screen = 'title';
     clearTimers();
-    $('#result').classList.remove('show');
+    $('#result').classList.remove('show'); if (window.Crown3D) Crown3D.hide();
     S.stopVoice();
     disposeGameCards(); Card3D.hideDeck(); Card3D.ambient(false);
     buildTitle();
@@ -184,7 +184,7 @@
     G.screen = 'game'; G.phase = 'intro'; G.scores = [0, 0]; G.r = 0; G.locked = [false, false];
     clearTimers(); S.stopVoice();
     stage.dataset.screen = 'game';
-    $('#result').classList.remove('show');
+    $('#result').classList.remove('show'); if (window.Crown3D) Crown3D.hide();
     clearTitleCards(); disposeGameCards(); Tin3D.show(false); Card3D.ambient(true, ...DECK);
     resetBuzzers(); renderScores(); hideWord();
     G.deck = Cards.makeDeck(ROUNDS + 1, Q.get('answer'));
@@ -517,6 +517,9 @@
     $('#btnAgain span').textContent = S.lang === 'ko' ? '다시 하기' : 'Play again';
     $('#btnHome2 span').textContent = S.lang === 'ko' ? '처음으로' : 'Home';
     $('#result').classList.add('show');
+    // the winner's crown in 3D (user: "결과화면에 왕관도 3d 형태로"); the flat CSS crown only when WebGL can't
+    document.querySelectorAll('.res-p').forEach((e, i) => e.classList.toggle('c3d', i === win && !!window.Crown3D && Crown3D.show(e)));
+    if (win < 0 && window.Crown3D) Crown3D.hide();
     S.sfx('win'); FX.confetti(110); FX.fireworks(7, 3600);
     mon.cheer(); mon.lookAt(win < 0 ? null : win ? 2150 : 250, 300);
     await wait(600); if (!alive(tok)) return;
