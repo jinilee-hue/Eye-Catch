@@ -34,7 +34,7 @@
   // game: the whole tutor stands on the screen's bottom edge between the two pads (user: "캐릭터는 위로 올라가야겠다")
   // game: the tutor stands at the back of the table, top centre, between the logo and the deck (user: "캐릭터가 가운데
   // 카드와 로고 사이로 들어가야해") — the dealer behind the cards
-  const PLACE = { title: [1190, 1262, 560],   // a little lower: the bigger logo (1.25x) clears its horns
+  const PLACE = { title: [1190, 1330, 560],   // lower: the logo clears its horns (user: "인트로에서는 캐릭터 조금 더 내려줘")
     // game: back at the bottom centre between the pads, bigger (user: "캐릭터는 원래대로 밑으로 내려서 키워줘")
     game: [1200, 1905, 560] };
   let placeAnim = null;
