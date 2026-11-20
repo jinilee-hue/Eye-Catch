@@ -158,7 +158,12 @@
   const VOWELS = new Set('aa ae ah ao aw ay eh er ey ih iy ow oy uh uw'.split(' '));
   // sounds a 5-year-old (and the recogniser) easily swaps: cost 0.4 instead of 1. m/n: the server hears a child voice's
   // m as n (en-US-Ana "map" -> "n ae p", mirror, mitt, moon) — near, so a rhyme like "nap" doesn't beat "map"
-  const NEAR = new Set(['ih iy', 'ih eh', 'iy ey', 'ah aa', 'ah ao', 'aa ao', 'ah uh', 'uw uh', 'eh ae', 'eh ey', 'ow ao', 'er r', 'n ng', 'm n']
+  // g/k, b/p, d/t: a word's end stop loses its voice in a child's or a Korean speaker's mouth ("mug" -> "m aa k", which
+  // then sat nearer to "mop" — Eye Catch, user: "머그도 잘 안되는데"); 12 words x 8 voices: right 89.6 -> 90.6 %, others
+  // passed unchanged at 5.2 %. m/b, n/d: a Korean word-initial m / n comes out half like b / d ("mitt" -> "bit"); p/m: a
+  // Korean unreleased end p is heard as m ("맵" -> "m ae m", which sat nearer to "man")
+  const NEAR = new Set(['ih iy', 'ih eh', 'iy ey', 'ah aa', 'ah ao', 'aa ao', 'ah uh', 'uw uh', 'eh ae', 'eh ey', 'ow ao', 'er r', 'n ng', 'm n',
+    'g k', 'b p', 'd t', 'm b', 'n d', 'p m']
     .flatMap(s => { const [a, b] = s.split(' '); return [a + ' ' + b, b + ' ' + a]; }));
   // a different vowel changes the word (meat / mop) more than a misheard end consonant (map / "mak"): 1.3
   const sub = (a, b) => a === b ? 0 : NEAR.has(a + ' ' + b) ? 0.4 : VOWELS.has(a) && VOWELS.has(b) ? 1.3 : 1;

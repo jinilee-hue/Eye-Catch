@@ -280,9 +280,15 @@
         const j = PhonicsAPI.judge(r.data, target, rv, PH);
         STT.last = { by: 'phonics-api', target, ms: r.ms, verdict: j.verdict, heard: j.heard, d: j.d };
         if (j.verdict === 'ok') return 'ok';
-        if (j.verdict === 'wrong') return 'wrong';
+        // the server heard another picture: the turn is lost only when the on-device recogniser hears another picture
+        // too; if it heard the right word the answer stands, otherwise the player says it once more (user: "머그도 잘
+        // 안되는데", "mitt도", "map도" — a misheard right word ended the turn at once)
+        if (j.verdict === 'wrong') { const d = await dev; STT.last.dev = d; return d === 'ok' ? 'ok' : d === 'wrong' ? 'wrong' : 'unclear'; }
         const dt = j.d[target], dr = Math.min(...rv.filter(w => j.d[w] != null).map(w => j.d[w]), Infinity);
-        if (j.heard && dt != null && j.rel <= 1.0 && dr - dt >= 0.2) return 'ok';      // nearest picture, clearly
+        // the picture its phonemes are nearest to, among the pictures on the table (looser since the user's
+        // "너무 엄격한거 아냐??": any lead, up to 1.3 sounds off per sound). With the kit's near sounds and the 'wrong'
+        // rule above, 12 words x 8 voices: right words 89.6 % -> 90.6 %, other words passed 5.2 % -> 5.7 %
+        if (j.heard && dt != null && j.rel <= 1.3 && dr - dt > 0) return 'ok';
         const d = await dev;
         if (d === 'ok') { STT.last.dev = 'ok'; return 'ok'; }
         return 'unclear';
@@ -317,7 +323,9 @@
     if (G.phase !== 'race' || G.locked[p]) { if (G.phase === 'race') S.sfx('wrong'); return; }
     const tok = G.tok;
     G.phase = 'answer'; clearTimers();
-    S.stopVoice(); S.sfx('buzz');
+    // with the microphone on, the press is a short click: the long chord got into the recording and could end the
+    // listen before the child had said the word
+    S.stopVoice(); S.sfx(Mic.state === 'on' && !Q.has('tap') ? 'press' : 'buzz');
     G.pressed[p] = true;
     buzzEl.forEach((b, i) => { b.classList.remove('ready', 'chance', 'cue'); if (i !== p) b.classList.add('locked'); });
     setBuzz(p, 'down', true); plateEl[p].classList.add('turn');
@@ -332,8 +340,11 @@
   async function answerTurn(p, tok) {
     const useMic = !Q.has('tap') && (Q.has('fake') || (Mic.state === 'on' && (STT.state !== 'error' || PhonicsAPI.usable())));
     if (!useMic) return tapTurn(p, tok);
+    try { return await micTurn(p, tok); } finally { S.setListening(false); }   // the music comes back however it ends
+  }
+  async function micTurn(p, tok) {
     for (let t = 0; t < 2; t++) {
-      setBuzz(p, 'listen', true);
+      setBuzz(p, 'listen', true); S.setListening(true);
       let verdict;
       if (Q.has('fake')) {
         await wait(700); verdict = fake.length ? fake.shift() : 'ok';
@@ -351,7 +362,7 @@
           if (Q.has('log')) console.log('heard', STT.last);
         } else return 'wrong';
       }
-      setBuzz(p, 'listen', false);
+      setBuzz(p, 'listen', false); S.setListening(false);
       if (!alive(tok)) return 'wrong';
       if (verdict === 'ok') return 'ok';
       if (verdict === 'wrong') return 'wrong';

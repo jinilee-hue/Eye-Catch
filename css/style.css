@@ -9,6 +9,7 @@
   --cream-shadow: rgba(150, 96, 56, 0.35);
   --ink: #6b3f22;
   --ink-soft: rgba(107, 63, 34, 0.55);
+  --ink-black: #1d1b22;          /* the result card's words: black, no brown (user) */
   --p1: #4f9ff0;
   --p1-deep: #2f76d4;
   --p1-ink: #1d4f96;
@@ -322,7 +323,18 @@ img { -webkit-user-drag: none; user-select: none; }
 .res-p { position: relative; width: 300px; height: 300px; border-radius: 50%; display: grid; place-items: center; }
 .res-p.p1 { background: linear-gradient(180deg, var(--p1), var(--p1-deep)); } .res-p.p2 { background: linear-gradient(180deg, var(--p2), var(--p2-deep)); }
 .res-p img { width: 76%; }
-.res-p b { position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%); min-width: 130px; height: 110px; padding: 0 26px; border-radius: 55px; background: var(--cream); box-shadow: 0 0 0 7px var(--cream-edge); font-size: 90px; line-height: 118px; color: var(--ink); }
+/* cards won = the in-game tally (a card back + the number) in a puffy capsule of the player's colour, like the pads;
+   white number, no brown lines or brown words (user: "카드 뒷면이랑 숫자 나오는구조로 역시 볼륨감 있는 박스에 … 갈색 선과
+   갈색 글씨 쓰지마") */
+.res-count { position: absolute; bottom: -76px; left: 50%; transform: translateX(-50%); height: 124px; padding: 0 40px 0 24px; border-radius: 62px;
+  display: flex; align-items: center; gap: 18px; color: var(--card-face); font-weight: 800;
+  box-shadow: 0 14px 20px var(--shade), inset 0 -11px 0 var(--shade), inset 0 9px 0 var(--white-a30); }
+.res-p.p1 .res-count { background: linear-gradient(180deg, var(--p1), var(--p1-deep)); text-shadow: 0 5px 0 var(--p1-ink); }
+.res-p.p2 .res-count { background: linear-gradient(180deg, var(--p2), var(--p2-deep)); text-shadow: 0 5px 0 var(--p2-ink); }
+.res-count b { font-size: 92px; line-height: 1; padding-top: 10px; min-width: 52px; }
+.res-count .mini-card { width: 76px; height: 76px; }
+.res-p.p1 .mini-card { --mc: var(--rim-sky); --mc-hi: var(--rim-sky-hi); --mc-deep: var(--rim-sky-deep); }
+.res-p.p2 .mini-card { --mc: var(--rim-pink); --mc-hi: var(--rim-pink-hi); --mc-deep: var(--rim-pink-deep); }
 .res-p.win:not(.c3d)::before { content: ''; position: absolute; top: -118px; left: 50%; width: 170px; height: 120px; transform: translateX(-50%) rotate(-8deg); background: var(--rim-l);
   clip-path: polygon(0 100%, 0 25%, 25% 60%, 50% 0, 75% 60%, 100% 25%, 100% 100%); filter: drop-shadow(0 6px 0 var(--rim-l-deep)); animation: crown .8s cubic-bezier(.2, 1.6, .4, 1) .3s both; }
 /* the 3D crown (js/crown3d.js): its own little WebGL canvas sitting on the winner's face, dropping in */
@@ -330,10 +342,10 @@ img { -webkit-user-drag: none; user-select: none; }
 @keyframes crown { from { transform: translateX(-50%) translateY(-80px) scale(.2); opacity: 0; } }
 .res-p.win { animation: winBob 1.2s ease-in-out infinite; }
 @keyframes winBob { 50% { transform: translateY(-14px) scale(1.04); } }
-.res-title { margin: 90px 0 50px; font-size: 120px; font-weight: 800; color: var(--ink); line-height: 1.05; }
+.res-title { margin: 128px 0 50px; font-size: 120px; font-weight: 800; color: var(--ink-black); line-height: 1.05; }
 .res-btns { display: flex; justify-content: center; gap: 50px; }
-.pill { display: flex; align-items: center; gap: 22px; height: 160px; padding: 10px 64px 0 50px; border-radius: 80px; font-size: 72px; font-weight: 800; color: var(--cream);
-  box-shadow: 0 18px 20px var(--cream-shadow), inset 0 12px 0 var(--white-a30); text-shadow: 0 4px 0 var(--shade); }   /* no tan rings (user) */
+.pill { display: flex; align-items: center; gap: 22px; height: 160px; padding: 10px 64px 0 50px; border-radius: 80px; font-size: 72px; font-weight: 800; color: var(--card-face);
+  box-shadow: 0 18px 20px var(--shade), inset 0 -11px 0 var(--shade), inset 0 12px 0 var(--white-a30); text-shadow: 0 4px 0 var(--shade); }   /* no tan rings, no brown shadow (user) */
 .pill svg { width: 74px; height: 74px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; margin-top: -8px; }
 .pill.again { background: linear-gradient(180deg, var(--orange), var(--orange-deep)); }
 .pill.home { background: linear-gradient(180deg, var(--p1), var(--p1-deep)); }

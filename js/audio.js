@@ -88,9 +88,13 @@
   function stopCur() { if (cur) { try { cur.onended = null; cur.stop(); } catch (e) { /* done */ } cur = null; talk(-1); } }
   A.stopVoice = function () { voiceTok++; seqTok++; stopCur(); };
   function talk(d) { A.talking = Math.max(0, A.talking + d); duck(); }
+  // while a player's answer is being recorded the music goes almost silent: through the speakers it got into the
+  // microphone with the child's word (user: "음성 인식 잘 안되는데..너무 엄격한거 아냐??")
+  A.listening = false;
+  A.setListening = function (on) { A.listening = !!on; duck(); };
   function duck() {
     if (!musicBus) return;
-    const t = A.ctx.currentTime, v = A.bgmOn ? (A.talking ? 0.05 : 0.13) * A.bgmLevel : 0;
+    const t = A.ctx.currentTime, v = A.bgmOn ? (A.listening ? 0.008 : A.talking ? 0.05 : 0.13) * A.bgmLevel : 0;
     musicBus.gain.cancelScheduledValues(t); musicBus.gain.setTargetAtTime(v, t, 0.12);
   }
   A.bgmLevel = 1;
@@ -134,6 +138,8 @@
       case 'flip': noise(t, 0.18, 0.3, 2400, 0.8); tone('triangle', 300, 900, t, 0.14, 0.12); break;
       case 'whoosh': noise(t, 0.4, 0.28, 900, 0.6); break;
       case 'buzz': [72, 79, 84].forEach((n, i) => tone('triangle', NOTE(n), NOTE(n), t + i * 0.05, 0.22, 0.32)); tone('sine', NOTE(96), NOTE(96), t + 0.15, 0.3, 0.12); break;
+      // the button press while the microphone is on: one short soft click, so it can't pass for the child's word
+      case 'press': tone('triangle', NOTE(79), NOTE(86), t, 0.06, 0.16); break;
       case 'listen': tone('sine', NOTE(84), NOTE(84), t, 0.09, 0.22); tone('sine', NOTE(91), NOTE(91), t + 0.1, 0.12, 0.22); break;
       case 'right': [76, 79, 84, 88, 91].forEach((n, i) => tone('triangle', NOTE(n), NOTE(n), t + i * 0.07, 0.3, 0.28)); noise(t + 0.3, 0.5, 0.06, 7000, 0.7, 'highpass'); break;
       case 'wrong': tone('sawtooth', 220, 150, t, 0.28, 0.12); tone('square', 233, 160, t + 0.02, 0.28, 0.05); break;

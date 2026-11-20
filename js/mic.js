@@ -59,7 +59,7 @@
    */
   Mic.listen = function (o = {}) {
     if (Mic.state !== 'on') return Promise.resolve({ kind: 'nomic' });
-    const waitMs = o.waitMs ?? 4500, maxMs = o.maxMs ?? 3500, endMs = o.endMs ?? 650;
+    const waitMs = o.waitMs ?? 4500, maxMs = o.maxMs ?? 3500, endMs = o.endMs ?? 800;   // a child's "mush… room" pause fits
     return new Promise(resolve => {
       const frames = ring.slice(-Math.round(PRE_S / FRAME_S));    // the lead-in
       let start = -1, last = -1, run = 0, voiced = 0, done = false, n = 0;
@@ -88,6 +88,9 @@
         o.onLevel && o.onLevel(Math.min(1, Math.sqrt(rms / 0.15)));
         if (start < 0) { if (n * 20 >= waitMs) finish({ kind: 'silence' }); return; }
         const quiet = (i - last) * 20, long = (i - Math.max(start, live0 - 1)) * 20;
+        // a blip (the button's own sound, a knock) is not the answer: forget it and keep waiting for the word,
+        // instead of ending the turn's listen on it
+        if (quiet >= endMs && voiced < 10 && n * 20 < waitMs) { start = -1; run = 0; voiced = 0; return; }
         if (quiet >= endMs || long >= maxMs) finish(voiced >= 8 ? utter() : { kind: 'silence' });
       };
       listeners.add(fn);
