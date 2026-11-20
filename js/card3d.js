@@ -33,8 +33,11 @@
     p.push(new THREE.Vector2(RIN - 0.004, -h));                 // inner back edge of the rim
     arc(1 - 0.045, -h + 0.0, 0.045, -PI / 2, 0, 8);              // round back corner
     arc(1 - 0.045, h - 0.045, 0.045, 0, PI / 2, 8);             // round front corner, level with the face
-    p.push(new THREE.Vector2(RIN - 0.004, h));                   // flat to the face: no lip, no groove (user: "파인거 처럼
-                                                                  // 안에 그림자 주지말고") — the face is not sunk in
+    // flat to the face: no lip, no groove (user: "파인거 처럼 안에 그림자 주지말고") — the face is not sunk in. The rim's
+    // inner edge tucks a little UNDER the face instead of lying in its plane: where the two met at 0.001 apart they
+    // z-fought into a broken edge on cards lying on the table (user: "테두리는 깨져보이지 않게 부드럽게")
+    p.push(new THREE.Vector2(RIN + 0.012, h));
+    p.push(new THREE.Vector2(RIN - 0.006, h - 0.004));       // a shallow dip: lit like the rim, no dark seam
     const rim = new THREE.LatheGeometry(p, 160);
     rim.rotateX(PI / 2);                                          // lathe axis y -> z (front = +z)
     rim.computeVertexNormals();
@@ -72,7 +75,7 @@
     const st = STYLE[style], c = document.createElement('canvas'); c.width = c.height = 1024;
     const g = c.getContext('2d');
     const paint = () => {
-      g.clearRect(0, 0, 1024, 1024);
+      g.fillStyle = css(st.rim); g.fillRect(0, 0, 1024, 1024);       // no transparent corners to darken the edge
       for (let i = 0; i < 30; i++) {
         g.beginPath(); g.moveTo(512, 512); g.arc(512, 512, 520, i * PI / 15, (i + 1) * PI / 15); g.closePath();
         g.fillStyle = css(i % 2 ? st.hi : st.rim); g.fill();
@@ -145,12 +148,10 @@
       }
     }
     card.draw = function () {
-      ctx.clearRect(0, 0, TEX, TEX);
-      ctx.fillStyle = css('--card-face'); ctx.beginPath(); ctx.arc(FR, FR, FR, 0, 2 * PI); ctx.fill();   // flat white
-      // a hair of soft shade right at the face's edge, so it meets the rim smoothly instead of a hard white step
-      const eg = ctx.createRadialGradient(FR, FR, FR * 0.955, FR, FR, FR);
-      eg.addColorStop(0, 'rgba(0, 0, 0, 0)'); eg.addColorStop(1, css('--face-edge'));
-      ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(FR, FR, FR, 0, 2 * PI); ctx.fill();
+      // flat white over the WHOLE square: with transparent corners the texture's smaller mip levels mixed black into the
+      // disc's edge, a dark broken ring on cards seen at a slant (user: "흰색카드에 안에 원 테두리가 검은색 들어가 깨져보여").
+      // No painted edge shade either — the rim now meets the face by itself
+      ctx.fillStyle = css('--card-face'); ctx.fillRect(0, 0, TEX, TEX);
       // two passes: every yellow tile first, then pictures and words on top — a tile never covers a neighbour's word
       // the matched picture: a yellow tile behind the big picture, no word (user: "선택됐을때가 수정하기 전 버전이
       // 낫다는거야" — the tile-with-word try was reverted). Tiles first, pictures on top.
@@ -211,10 +212,9 @@
 
     // meshes
     const rimMat = new THREE.MeshStandardMaterial({ color: css(st.rim), roughness: 0.3, metalness: 0.05, envMapIntensity: 1.1, side: THREE.DoubleSide });
-    const faceMat = new THREE.MeshBasicMaterial({ map: tex, toneMapped: false,   // true white, no yellow cast (user)
-      // always in front of the rim's inner edge it overlaps: at a grazing view (cards lying on the table) the 0.001 gap
-      // z-fought into a jagged, broken edge (user: "흰색면과 선 사이에 테두리 부드럽지가 않고 깨져보이는데")
-      polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 });
+    // true white, no yellow cast (user). No polygonOffset: at a slant it pulled the face so far forward that a card's
+    // face showed through the card lying on top of it on a pile (the rim now tucks under the face instead)
+    const faceMat = new THREE.MeshBasicMaterial({ map: tex, toneMapped: false });
     // the back in the card's own colour: the deck is sky and pink cards stacked by turns, no yellow (user)
     const backMat = new THREE.MeshStandardMaterial({ map: backTexture(style === 'plain' ? 'sky' : style), roughness: 0.45 });
     const root = new THREE.Group();              // placed on the stage
@@ -297,17 +297,22 @@
     };
     /** a won card flies to its player's side of the table and lies down there, fanned on the pile (user: "카드 획득한건
      *  민트 테이블에 양옆에 카드들이 펼쳐진채 쌓이게"). sx, sy = stage px; px = its size there; rz = its turn on the pile */
-    card.toPile = (sx, sy, px, rz, z, ms = 900, dir = 1) => {
+    // n = its place on the pile: it lies n card-thicknesses up, on top of the cards before it (they cut into each other
+    // and looked broken when they were closer — user: "카드가 겹쳐져서 깨져보여"); a pile card is a little thinner
+    card.toPile = (sx, sy, px, rz, z, ms = 900, dir = 1, n = 0) => {
       const { p, k } = S.placeAt(sx, sy, z);
+      const LIE = 1.1, THIN = 0.5, sw = px / 200 * k;                    // tilt flat onto the table; world units per card unit
+      p.add(new THREE.Vector3(0, sin(LIE), cos(LIE)).multiplyScalar(n * T * THIN * sw * 1.15));
       const d = p.clone().sub(root.position).divideScalar(root.scale.x);
-      const s1 = (px / 200 * k) / root.scale.x, y0 = tilt.rotation.y;
+      const s1 = sw / root.scale.x, y0 = tilt.rotation.y;
       card.float = false; bob.position.set(0, 0, 0); bob.rotation.set(0, 0, 0);
       if (card.halo) card.halo.visible = false;
       return card.tween(ms, (u) => {
         mover.position.copy(d).multiplyScalar(u); mover.position.y += sin(u * PI) * 0.9;
         mover.scale.setScalar(1 + (s1 - 1) * u);
+        coin.scale.z = 1 + (THIN - 1) * u;
         tilt.rotation.y = y0 * (1 - u);
-        mover.rotation.set(-1.0 * u, dir * 2 * PI * u, rz * u);       // a flip on the way, then flat on the table
+        mover.rotation.set(-LIE * u, dir * 2 * PI * u, rz * u);        // a flip on the way, then flat on the table
       }, t => t * t * (3 - 2 * t));
     };
     /** a sky / gold rim for the slot it now sits in (the right card slides over to the left) */
@@ -315,7 +320,11 @@
       const to = new THREE.Color(css(STYLE[style].rim)), from = rimMat.color.clone();
       card.style = style;
       if (card.halo && STYLE[style].halo) { card.halo.material.map = haloTexture(style); card.halo.material.needsUpdate = true; }
-      return card.tween(ms, u => rimMat.color.copy(from).lerp(to, u), t => t);
+      const bm = style !== 'plain' && backTexture(style);                  // the back turns with the rim, halfway
+      return card.tween(ms, u => {
+        rimMat.color.copy(from).lerp(to, u);
+        if (bm && u >= 0.5 && backMat.map !== bm) { backMat.map = bm; backMat.needsUpdate = true; }
+      }, t => t);
     };
     /** turn the face toward the middle of the table (radians about y; + = toward the right) */
     card.yawTo = (y, ms = 0) => {

@@ -61,6 +61,7 @@
   --skip-yel-hi: #f8eab0;
   --skip-yel-deep: #dcbd62;
   --skip-yel-ink: #9a7420;
+  --skip-icon: #5e3d12;      /* dark brown: a white icon vanished on the yellow (user: "검은색이나 갈색으로") */
   --mic-shade: rgba(20, 30, 70, 0.28);
   --locked-filter: grayscale(1) brightness(1.06) contrast(.82);
   /* system buttons: the tutor's lilac, so they read apart from the orange START (user: "조금 다른 컬러로"); lighter, the
@@ -101,7 +102,6 @@
   --rim-r-deep: #ef6f1c;
   --card: #fffdf8;
   --card-face: #ffffff;
-  --face-edge: rgba(150, 140, 130, 0.22);
   --card-edge: #f1e7d8;
   --card-shadow: rgba(80, 60, 40, 0.28);
   --glow: rgba(255, 246, 200, 0.95);
@@ -330,12 +330,12 @@ img { -webkit-user-drag: none; user-select: none; }
 /* SKIP the explanation = a round JUMP button next to the tutor (user: "skip 버튼은 캐릭터 옆에 점프하는 아이콘 형태로"):
    the jumping-child icon of Phonics Match's jump button on a candy ball in the tutor's horn yellow (user: "skip 버튼 컬러 캐릭터
    뿔처럼 노란색으로"); it hops in and bobs while the tutor explains */
-.skip-btn { position: absolute; left: 1584px; top: 1349px; width: 112px; height: 112px;   /* beside the tutor's raised hand, clear of the pink card and the pad */ border-radius: 50%; display: grid; place-items: center;
+.skip-btn { position: absolute; left: 1462px; top: 1652px; width: 112px; height: 112px;   /* beside the tutor's mouth on its right, outside its body (user: "입 옆에" → "우측으로 옮겨줘") */ border-radius: 50%; display: grid; place-items: center;
   background: radial-gradient(70% 45% at 46% 20%, var(--skip-yel-hi) 0 38%, transparent 70%), radial-gradient(circle at 50% 38%, var(--skip-yel) 0 48%, var(--skip-yel-deep) 100%);
   box-shadow: 0 12px 20px var(--shade), inset 0 -12px 14px var(--skip-yel-deep);
   opacity: 0; transform: scale(.3); pointer-events: none; transition: opacity .25s, transform .35s cubic-bezier(.2, 1.6, .4, 1); }
-.skip-btn svg { width: 64%; height: 64%; fill: none; stroke: var(--card-face); stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 3px 0 var(--skip-yel-ink)); }
-.skip-btn svg circle { fill: var(--card-face); stroke: none; }
+.skip-btn svg { width: 64%; height: 64%; fill: none; stroke: var(--skip-icon); stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 2px 0 var(--skip-yel-hi)); }
+.skip-btn svg circle { fill: var(--skip-icon); stroke: none; }
 .skip-btn.show { opacity: 1; transform: none; pointer-events: auto; animation: jumpBob 1.6s ease-in-out .4s infinite; }
 @keyframes jumpBob { 0%, 70%, 100% { translate: 0 0; } 80% { translate: 0 -18px; } 90% { translate: 0 0; } }
 .skip-btn:active { transform: scale(.92); }

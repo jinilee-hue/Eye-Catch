@@ -454,19 +454,39 @@
     await next(tok);
   }
 
-  // the won cards lie on the mint table above the winner's pad, fanned out toward the middle and stacked
+  // the won cards lie along the round mint table, on its left and right sides (user: "민트 탁자 양옆에 라운드 따라서
+  // 쌓이면"): on a ring just inside the painted table's rim — an ellipse fitted to its back and front edges on bg.webp
+  // (px: centre 1200,1145, radii 1340 x 490). Player 1's pile runs from just above the pad up the table's left side,
+  // player 2's is its mirror. The backdrop covers the window, so the ring goes through the same cover fit; the piles lie
+  // behind the play cards, which float above the table
+  const TABLE = { cx: 1200, cy: 1145, a: 1340, b: 490 }, PILE = { ring: 0.79, gap: 58, px: 260, z: -2.6 };
+  function coverFit() {
+    const W = innerWidth, H = innerHeight, c = Math.max(W / 2400, H / 1792), k = Math.min(W / 2400, H / 1792);
+    return { c, k, ox: (W - 2400 * c) / 2, oy: (H - 1792 * c) / 2 };
+  }
+  const bgToStage = (bx, by, f) => ({ x: (f.ox + bx * f.c) / f.k - G.ex, y: (f.oy + by * f.c) / f.k - G.ey });
   function pileSpot(p, i) {
-    const s = p ? -1 : 1, ex = G.ex || 0;
-    const x = (p ? 2400 + 0.45 * ex - 320 : 320 - 0.45 * ex) + s * i * 66;      // fanned out toward the middle
-    return { x, y: 1425 - i * 8, px: 380, rz: s * (-0.36 + i * 0.09) + (i % 2 ? 0.05 : -0.05), z: 0.6 + i * 0.03 };
+    const fit = coverFit();
+    // f = 0 at the table's side, > 0 toward the front (the pads), < 0 toward the back
+    const ring = f => bgToStage(TABLE.cx - TABLE.a * PILE.ring * Math.cos(f), TABLE.cy + TABLE.b * PILE.ring * Math.sin(f), fit);
+    const top = 1490 + G.ey - 40;                                        // the first card tucks just behind the pad
+    let f = 1.2;
+    while (f > 0 && ring(f).y > top) f -= 0.004;
+    let q = ring(f);
+    for (let walked = 0; walked < i * PILE.gap && f > -1.4;) { const n = ring(f -= 0.004); walked += Math.hypot(n.x - q.x, n.y - q.y); q = n; }
+    const x = Math.max(q.x, -G.ex + PILE.px * 0.55);                     // never past the window's edge
+    return { x: p ? 2400 - x : x, y: q.y, px: PILE.px,                   // player 2 = the mirror image
+      rz: (p ? -1 : 1) * [0.12, -0.1, 0.2, -0.04, 0.08][i % 5], z: PILE.z };
   }
   async function flyToPlate(card, p) {
     unhit();
     G.piles[p].push(card);
-    const q = pileSpot(p, G.piles[p].length - 1);
+    const n = G.piles[p].length - 1, q = pileSpot(p, n);
     S.sfx('whoosh');
-    card.restyle(p ? 'p2' : 'p1', 900);              // the winner's colour on the way to the pile
-    await card.toPile(q.x, q.y, q.px, q.rz, q.z, 900, p ? 1 : -1);
+    // each card keeps a card colour, sky and pink by turns, so the pile mixes both (user: "원래 카드 색으로 섞여서
+    // 쌓이는게 나을거 같아" — the winner's colour made one player's pile all pink)
+    card.restyle((n + p) % 2 ? 'pink' : 'sky', 900);
+    await card.toPile(q.x, q.y, q.px, q.rz, q.z, 900, p ? 1 : -1, n);
     S.sfx('card');
     FX.sparkles(q.x, q.y, 10, 160);
   }
