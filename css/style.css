@@ -234,12 +234,13 @@ img { -webkit-user-drag: none; user-select: none; }
 .buzzer .cue { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .25s; }
 .buzzer.cue .cue, .buzzer.chance .cue { opacity: 1; }
 .buzzer.locked .cue, .buzzer.down .cue, .buzzer.listen .cue, .buzzer.thinking .cue { opacity: 0; }
-/* the hand is a 3D glove rendered once per player (js/hand3d.js, user: "3d 손가락으로"); --tx/--ty = its fingertip in
-   the box: it turns round that point (P1 up-left, P2 the mirror) and taps along its finger */
-.buzzer .hand { position: absolute; left: calc(var(--ax) - var(--tx, 80px)); top: calc(54% - var(--ty, 10px)); width: 270px; height: 316px;
+/* the hand is a 3D cartoon glove rendered once per player (js/hand3d.js, user: "3d 손가락으로", "만화 장갑"); --tx/--ty =
+   its fingertip in the box. It points UP at the button from below (user: "아래에서 위로"), the cuff running off the screen's
+   bottom edge, and taps along its finger */
+.buzzer .hand { position: absolute; left: calc(var(--ax) - var(--tx, 80px)); top: calc(50% - var(--ty, 10px)); width: 270px; height: 316px;
   transform-origin: var(--tx, 80px) var(--ty, 10px); transform: rotate(var(--rot)) translateY(56px); filter: drop-shadow(0 12px 10px var(--shade)); }
-.buzzer.p1 .hand { --ax: 58%; --rot: -40deg; }
-.buzzer.p2 .hand { --ax: 42%; --rot: 40deg; }
+.buzzer.p1 .hand { --ax: 56%; --rot: -14deg; }
+.buzzer.p2 .hand { --ax: 44%; --rot: 14deg; }
 .buzzer.cue .hand, .buzzer.chance .hand { animation: tapHand 1.2s ease-in-out infinite; }
 @keyframes tapHand { 0%, 100% { transform: rotate(var(--rot)) translateY(56px); } 35%, 50% { transform: rotate(var(--rot)) translateY(0) scale(.94); } }
 /* each tap sends a ring out from the button's edge, white with the player's colour round it */
