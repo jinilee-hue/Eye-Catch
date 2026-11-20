@@ -228,6 +228,26 @@ img { -webkit-user-drag: none; user-select: none; }
 .buzzer.thinking .mic { opacity: 1; transform: scale(1); animation: think 0.8s linear infinite; }
 @keyframes think { 50% { transform: scale(.9); } }
 
+/* "press here": a white hand taps the button, a ripple on each tap (user: "플레이어들 버튼 누르라고 좀더 강조 … 손가락이나
+   화살표"). Shown on .cue (a player who hasn't pressed yet this game, or nobody pressed for a while) and .chance (the
+   rule demo, a second chance). The hand reaches in from the pad's side, finger on the dome */
+.buzzer .cue { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .25s; }
+.buzzer.cue .cue, .buzzer.chance .cue { opacity: 1; }
+.buzzer.locked .cue, .buzzer.down .cue, .buzzer.listen .cue, .buzzer.thinking .cue { opacity: 0; }
+/* the hand is a 3D glove rendered once per player (js/hand3d.js, user: "3d 손가락으로"); --tx/--ty = its fingertip in
+   the box: it turns round that point (P1 up-left, P2 the mirror) and taps along its finger */
+.buzzer .hand { position: absolute; left: calc(var(--ax) - var(--tx, 80px)); top: calc(54% - var(--ty, 10px)); width: 270px; height: 316px;
+  transform-origin: var(--tx, 80px) var(--ty, 10px); transform: rotate(var(--rot)) translateY(56px); filter: drop-shadow(0 12px 10px var(--shade)); }
+.buzzer.p1 .hand { --ax: 58%; --rot: -40deg; }
+.buzzer.p2 .hand { --ax: 42%; --rot: 40deg; }
+.buzzer.cue .hand, .buzzer.chance .hand { animation: tapHand 1.2s ease-in-out infinite; }
+@keyframes tapHand { 0%, 100% { transform: rotate(var(--rot)) translateY(56px); } 35%, 50% { transform: rotate(var(--rot)) translateY(0) scale(.94); } }
+/* each tap sends a ring out from the button's edge, white with the player's colour round it */
+.buzzer .ripple { position: absolute; inset: 0; border-radius: 50%; border: 12px solid var(--card-face); box-shadow: 0 0 0 6px var(--c), 0 0 24px 6px var(--glowc);
+  opacity: 0; transform: scale(.98); }
+.buzzer.cue .ripple, .buzzer.chance .ripple { animation: tapRipple 1.2s ease-out .42s infinite; }
+@keyframes tapRipple { 0% { opacity: .95; transform: scale(.98); } 70%, 100% { opacity: 0; transform: scale(1.32); } }
+
 /* the game screen's logo: EYE over CATCH, centred, letters clear of each other.
    saturation is baked into logo-game.webp */
 .game-logo { position: absolute; left: 50%; top: calc(30px - var(--ey)); width: 520px;   /* bigger (user) */ transform: translateX(-50%); pointer-events: none; filter: drop-shadow(0 8px 10px var(--cream-shadow)); }

@@ -239,9 +239,9 @@ ART['bg'] = {'w': bg.width, 'h': bg.height}
 logo, _ = trim(Image.open(D / 'eyecatch_logo.png').convert('RGBA'))
 logo.save(IMG / 'logo.webp', quality=92, method=6)
 ART['logo'] = {'w': logo.width, 'h': logo.height}
-# the title, the game screen, the card backs and the tin lid all wear this stacked logo
-glogo = purple_letters(game_logo(Image.open(D / 'eyecatch_logo.png')))
-glogo.save(IMG / 'logo-game.webp', quality=92, method=6)
+# logo-game.webp is the approved mark (the monster on the scalloped plate). A full run
+# does not rebuild it from eyecatch_logo.png; it only refreshes the data URL and the size.
+glogo = Image.open(IMG / 'logo-game.webp').convert('RGBA')
 ART['logoGame'] = {'w': glogo.width, 'h': glogo.height}
 # a small copy as a data URL: the 3D tin lid and the card backs (file:// can't use image FILES as WebGL textures)
 import base64, io

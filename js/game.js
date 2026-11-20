@@ -152,7 +152,10 @@
   const buzzEl = [$('#buzz1'), $('#buzz2')], plateEl = [$('#plate1'), $('#plate2')], scoreEl = [$('#score1'), $('#score2')];
   function clearTimers() { G.timers.forEach(clearTimeout); G.timers = []; }
   function setBuzz(p, cls, on) { buzzEl[p].classList.toggle(cls, on); }
-  function resetBuzzers() { buzzEl.forEach(b => b.classList.remove('ready', 'down', 'listen', 'thinking', 'locked', 'chance')); plateEl.forEach(p => p.classList.remove('turn')); }
+  function resetBuzzers() { buzzEl.forEach(b => b.classList.remove('ready', 'down', 'listen', 'thinking', 'locked', 'chance', 'cue')); plateEl.forEach(p => p.classList.remove('turn')); }
+  // the tapping hand on a button: until that player has pressed once this game, and again for both when a round
+  // goes quiet (user: "어디를 눌러야 할지 모르니까 손가락이나 화살표나 뭐가 표시가 되면")
+  function cue(p, on) { buzzEl[p].classList.toggle('cue', on && !G.locked[p]); }
   function renderScores() { scoreEl.forEach((e, i) => { e.textContent = G.scores[i]; }); }
   function setDeckN(n) { Card3D.setDeck(n, ...DECK, 320); }   // bigger (user: "가운데 덮힌 카드도 좀 더 키우면")
   // the two cards a little apart, the deck of the cards still to come between them (user: "남은 카드도 가운데 넣어줘,
@@ -181,7 +184,7 @@
   async function startGame() {
     firstTouch();
     const tok = ++G.tok;
-    G.screen = 'game'; G.phase = 'intro'; G.scores = [0, 0]; G.r = 0; G.locked = [false, false];
+    G.screen = 'game'; G.phase = 'intro'; G.scores = [0, 0]; G.r = 0; G.locked = [false, false]; G.pressed = [false, false];
     clearTimers(); S.stopVoice();
     stage.dataset.screen = 'game';
     $('#result').classList.remove('show'); if (window.Crown3D) Crown3D.hide();
@@ -292,11 +295,13 @@
     G.phase = 'race'; G.locked = [false, false];
     resetBuzzers();
     buzzEl.forEach(b => b.classList.add('ready'));
+    [0, 1].forEach(p => cue(p, !G.pressed[p]));
     mon.lookAt(null); mon.pose('up');
     armTimers(tok);
   }
   function armTimers(tok) {
     clearTimers();
+    G.timers.push(setTimeout(() => { if (alive(tok) && G.phase === 'race') [0, 1].forEach(p => cue(p, true)); }, 6000));
     G.timers.push(setTimeout(() => { if (alive(tok) && G.phase === 'race') hint(); }, 14000));
     G.timers.push(setTimeout(() => { if (alive(tok) && G.phase === 'race') hint(); }, 28000));
     G.timers.push(setTimeout(() => { if (alive(tok) && G.phase === 'race') nobody(tok); }, 42000));
@@ -313,7 +318,8 @@
     const tok = G.tok;
     G.phase = 'answer'; clearTimers();
     S.stopVoice(); S.sfx('buzz');
-    buzzEl.forEach((b, i) => { b.classList.remove('ready', 'chance'); if (i !== p) b.classList.add('locked'); });
+    G.pressed[p] = true;
+    buzzEl.forEach((b, i) => { b.classList.remove('ready', 'chance', 'cue'); if (i !== p) b.classList.add('locked'); });
     setBuzz(p, 'down', true); plateEl[p].classList.add('turn');
     mon.lookAt(p ? 2150 + G.ex : 250 - G.ex, 1560 + G.ey); mon.hop(1, 0.2);
     const res = await answerTurn(p, tok);
