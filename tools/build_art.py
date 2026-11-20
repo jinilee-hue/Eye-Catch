@@ -171,6 +171,15 @@ def _grow(mask, r):
 
 
 bg = Image.open(D / 'eyecatch_bg.png').convert('RGB')
+# less yellow (user 2026-11-19: "배경 노란기는 70% 빼줘"): in Lab only the yellow side of b* is scaled (x0.3), so blues,
+# the mint table and the pinks keep their hue; creams turn more neutral
+from PIL import ImageCms  # noqa: E402
+_lab, _srgb = ImageCms.createProfile('LAB'), ImageCms.createProfile('sRGB')
+_x = np.asarray(ImageCms.applyTransform(bg, ImageCms.buildTransformFromOpenProfiles(_srgb, _lab, 'RGB', 'LAB'))).astype(np.float32)
+_b = _x[..., 2] - 128
+_x[..., 2] = np.where(_b > 0, 128 + _b * 0.3, _x[..., 2])
+bg = ImageCms.applyTransform(Image.fromarray(np.clip(_x, 0, 255).astype(np.uint8), 'LAB'),
+                             ImageCms.buildTransformFromOpenProfiles(_lab, _srgb, 'LAB', 'RGB'))
 bg.save(IMG / 'bg.webp', quality=88, method=6)
 ART['bg'] = {'w': bg.width, 'h': bg.height}
 logo, _ = trim(Image.open(D / 'eyecatch_logo.png').convert('RGBA'))

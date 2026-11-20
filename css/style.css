@@ -57,21 +57,26 @@
   --mic-gloss: rgba(255, 255, 255, 0.8);
   --mic-on: #3fd98f;
   --mic-on-deep: #18a865;
+  --skip-yel: #f4d885;        /* the tutor's horns as they look lit on screen (COL.horn #ecd682) */
+  --skip-yel-hi: #f8eab0;
+  --skip-yel-deep: #dcbd62;
+  --skip-yel-ink: #9a7420;
   --mic-shade: rgba(20, 30, 70, 0.28);
   --locked-filter: grayscale(1) brightness(1.06) contrast(.82);
-  /* system buttons: the tutor's lilac, so they read apart from the orange START (user: "조금 다른 컬러로") */
-  --btn-top: #cfb2f5;
-  --btn-mid: #ad8ae6;
-  --btn-bot: #9370d6;
-  --btn-gloss: rgba(250, 244, 255, 0.72);
-  --btn-ring: #f6efff;
-  --btn-drop: rgba(110, 70, 150, 0.28);
+  /* system buttons: the tutor's lilac, so they read apart from the orange START (user: "조금 다른 컬러로"); lighter, the
+     tutor's own body colour, so they sit with the pastel room (user 2026-11-19 picked ② "튜터 몸색 연한 라일락") */
+  --btn-top: #eadcf3;
+  --btn-mid: #d4b6e2;
+  --btn-bot: #bf9bd0;
+  --btn-gloss: rgba(255, 250, 255, 0.75);
+  --btn-ring: #faf4fc;
+  --btn-drop: rgba(120, 80, 140, 0.24);
   --btn-edge: #eeb37c;
   --btn-edge-deep: #c9714a;
   --btn-inner-shade: rgba(170, 60, 20, 0.35);
   --btn-ink: #ffffff;
-  --btn-ink-shadow: rgba(90, 50, 150, 0.45);
-  --btn-chip-shade: rgba(160, 120, 210, 0.35);
+  --btn-ink-shadow: rgba(105, 60, 130, 0.6);   /* stronger on the light lilac: the white icons stay readable */
+  --btn-chip-shade: rgba(150, 110, 170, 0.32);
   --tin: #f2a6b4;
   --tin-hi: #f9c3cc;
   --tin-lo: #e08fa2;
@@ -118,7 +123,7 @@ img { -webkit-user-drag: none; user-select: none; }
 
 /* the room fills the whole window (cover); the play area (stage) is fitted inside it, and the things that belong at the
    screen edges (plates, buttons, sys, result dim) move out to the real edges by --ex / --ey (set in game.js fit()) */
-#backdrop { position: fixed; inset: 0; background: url(../assets/img/bg.webp) center / cover no-repeat; }
+#backdrop { position: fixed; inset: 0; background: url(../assets/img/bg.webp?v=63245d8c) center / cover no-repeat; }
 #stage { position: absolute; left: 50%; top: 50%; width: 2400px; height: 1792px; transform: translate(-50%, -50%) scale(var(--k)); transform-origin: 50% 50%; overflow: visible; --ex: 0px; --ey: 0px; }
 #stage > .bg { display: none; }
 .layer { position: absolute; inset: 0; pointer-events: none; }
@@ -250,7 +255,7 @@ img { -webkit-user-drag: none; user-select: none; }
 @keyframes popOut { 0% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(.6); } }
 
 /* ── system buttons ────────────────────────────────────────────────────── */
-.sys { position: absolute; right: calc(60px - var(--ex)); top: calc(46px - var(--ey)); display: flex; gap: 40px; }
+.sys { position: absolute; right: calc(60px - var(--ex)); top: calc(46px - var(--ey)); display: flex; gap: 18px; }   /* closer (user: "버튼 사이에 여백이 너무 넓은거 같고") */
 #stage[data-screen="game"] #btnLang { display: none; }   /* the language is chosen on the title only (user) */
 /* phonics-api key (title only): a teacher enters it once per device; the dot = mint when the company server judges
    the words, sand when the on-device recogniser does (no key / offline) */
@@ -323,12 +328,13 @@ img { -webkit-user-drag: none; user-select: none; }
 
 
 /* SKIP the explanation = a round JUMP button next to the tutor (user: "skip 버튼은 캐릭터 옆에 점프하는 아이콘 형태로"):
-   the jumping-child icon of Phonics Match's jump button, a green candy ball; it hops in and bobs while the tutor explains */
+   the jumping-child icon of Phonics Match's jump button on a candy ball in the tutor's horn yellow (user: "skip 버튼 컬러 캐릭터
+   뿔처럼 노란색으로"); it hops in and bobs while the tutor explains */
 .skip-btn { position: absolute; left: 1584px; top: 1349px; width: 112px; height: 112px;   /* beside the tutor's raised hand, clear of the pink card and the pad */ border-radius: 50%; display: grid; place-items: center;
-  background: radial-gradient(70% 45% at 46% 20%, var(--mic-gloss) 0 38%, transparent 70%), radial-gradient(circle at 50% 38%, var(--mic-on) 0 48%, var(--mic-on-deep) 100%);
-  box-shadow: 0 12px 20px var(--shade), inset 0 -12px 14px var(--mic-shade);
+  background: radial-gradient(70% 45% at 46% 20%, var(--skip-yel-hi) 0 38%, transparent 70%), radial-gradient(circle at 50% 38%, var(--skip-yel) 0 48%, var(--skip-yel-deep) 100%);
+  box-shadow: 0 12px 20px var(--shade), inset 0 -12px 14px var(--skip-yel-deep);
   opacity: 0; transform: scale(.3); pointer-events: none; transition: opacity .25s, transform .35s cubic-bezier(.2, 1.6, .4, 1); }
-.skip-btn svg { width: 64%; height: 64%; fill: none; stroke: var(--card-face); stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 3px 0 var(--mic-on-deep)); }
+.skip-btn svg { width: 64%; height: 64%; fill: none; stroke: var(--card-face); stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 3px 0 var(--skip-yel-ink)); }
 .skip-btn svg circle { fill: var(--card-face); stroke: none; }
 .skip-btn.show { opacity: 1; transform: none; pointer-events: auto; animation: jumpBob 1.6s ease-in-out .4s infinite; }
 @keyframes jumpBob { 0%, 70%, 100% { translate: 0 0; } 80% { translate: 0 -18px; } 90% { translate: 0 0; } }
