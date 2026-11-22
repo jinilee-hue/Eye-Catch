@@ -575,10 +575,11 @@
     const [a, b] = G.scores, win = a === b ? -1 : a > b ? 0 : 1;
     $('#res1').textContent = a; $('#res2').textContent = b;
     document.querySelectorAll('.res-p').forEach((e, i) => e.classList.toggle('win', i === win));
-    const T = S.lang === 'ko' ? ['1번 친구 승리!', '2번 친구 승리!', '비겼어요!'] : ['Player 1 wins!', 'Player 2 wins!', "It's a tie!"];
+    // screen words stay English in both languages; EN | 한 switches the voice only (user 2026-11-22: "화면 글자는 모두 영어로")
+    const T = ['Player 1 wins!', 'Player 2 wins!', "It's a tie!"];
     $('#resTitle').textContent = win < 0 ? T[2] : T[win];
-    $('#btnAgain span').textContent = S.lang === 'ko' ? '다시 하기' : 'Play again';
-    $('#btnHome2 span').textContent = S.lang === 'ko' ? '처음으로' : 'Home';
+    $('#btnAgain span').textContent = 'Play again';
+    $('#btnHome2 span').textContent = 'Home';
     $('#result').classList.add('show');
     // the winner's crown in 3D (user: "결과화면에 왕관도 3d 형태로"); the flat CSS crown only when WebGL can't
     document.querySelectorAll('.res-p').forEach((e, i) => e.classList.toggle('c3d', i === win && !!window.Crown3D && Crown3D.show(e)));
