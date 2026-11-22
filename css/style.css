@@ -380,3 +380,30 @@ img { -webkit-user-drag: none; user-select: none; }
 .skip-btn.show { opacity: 1; transform: none; pointer-events: auto; animation: jumpBob 1.6s ease-in-out .4s infinite; }
 @keyframes jumpBob { 0%, 70%, 100% { translate: 0 0; } 80% { translate: 0 -18px; } 90% { translate: 0 0; } }
 .skip-btn:active { transform: scale(.92); }
+
+/* ── top bars on the Toy Catch standard (user 2026-11-20: "상단 버튼들 크기도 제각각 같은데 Toy-Catch 기준으로 다 바꿔볼까?" → "응")
+   Toy Catch: button 7.6 tu, 3 tu from the top and the side, 0.17 button apart, tu = min(1vh, 100vw / 177.78) on the
+   SCREEN. This stage is 2400×1792 design px scaled by --k, so the sizes are the screen sizes ÷ --k (and the toggle's
+   parts are shares of the button, as in Toy Catch) — the same size on screen as Toy Catch's at any window. */
+.sys { --tu: calc(min(1vh, calc(100vw / 177.78)) / var(--k)); --hb: calc(7.6 * var(--tu));
+  right: calc(3 * var(--tu) - var(--ex)); top: calc(3 * var(--tu) - var(--ey)); gap: calc(.17 * var(--hb)); }
+.sys.sys-left { right: auto; left: calc(3 * var(--tu) - var(--ex)); }
+.sys .sys-btn { width: var(--hb); height: var(--hb); }
+.sys .sys-btn.lang { width: auto; padding: 0 calc(.11 * var(--hb)); gap: calc(.078 * var(--hb)); border-radius: calc(.5 * var(--hb)); }
+.sys .sys-btn.lang .knob { left: calc(.11 * var(--hb)); width: calc(.75 * var(--hb)); height: calc(.75 * var(--hb)); margin-top: calc(-.375 * var(--hb)); }
+.sys .sys-btn.lang[data-l="ko"] .knob { transform: translateX(calc(.828 * var(--hb))); }
+.sys .sys-btn.lang .flag { width: calc(.75 * var(--hb)); height: calc(.75 * var(--hb)); }
+.sys .sys-btn.lang .flag svg { width: calc(.594 * var(--hb)); height: calc(.594 * var(--hb)); }
+
+/* ── the language toggle in Toy Catch's form (user 2026-11-20: "토글 형태는 이렇게 안에 그림자가 있는 형태로 통일해야해. 물론
+   컬러는 게임별로 조금씩 달라도"): a pill with a side (thickness), a groove pressed into it (inner shadow), a white knob
+   under the flag in use, the other flag small and dimmed — Toy Catch's proportions (shares of the button --hb), this game's colours. */
+.sys .sys-btn.lang { padding: 0 calc(.08 * var(--hb)); gap: calc(.03 * var(--hb)); }
+.sys .sys-btn.lang::before { content: ''; position: absolute; inset: calc(.07 * var(--hb)); border-radius: 999px; pointer-events: none;
+  background: linear-gradient(#cfb5de, #e6d6ef); box-shadow: inset 0 calc(.05 * var(--hb)) calc(.08 * var(--hb)) rgba(105, 60, 130, .34); }
+.sys .sys-btn.lang .knob { top: calc(.1 * var(--hb)); left: calc(.1 * var(--hb)); width: calc(.8 * var(--hb)); height: calc(.8 * var(--hb)); margin-top: 0;
+  background: #fff; box-shadow: 0 calc(.03 * var(--hb)) calc(.07 * var(--hb)) rgba(105, 60, 130, .34); }
+.sys .sys-btn.lang[data-l="ko"] .knob { transform: translateX(calc(.87 * var(--hb))); }
+.sys .sys-btn.lang .flag { width: calc(.84 * var(--hb)); height: calc(.84 * var(--hb)); }
+.sys .sys-btn.lang .flag svg { width: 86%; height: 86%; box-shadow: none; }
+.sys .sys-btn.lang .flag:not(.on) svg { transform: scale(.68); opacity: .6; filter: grayscale(.3); }
