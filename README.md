@@ -12,12 +12,23 @@
   (`PhonicsAPI.judge`, phonics-kit). 서버의 `success`는 쓰지 않는다(moon을 mop으로 물어도 통과시킴).
 - ih/iy는 같은 소리로 본다: 서버가 공식 mitt 녹음도 `m iy t`로 들어서 meat·mitt는 서로 통과한다.
 - 키 없음 · 오프라인 · 서버 혼잡 · 6초 초과 → 그 차례는 기기 안 whisper(아래). 실패하면 1분(혼잡이면 15초) 동안 서버를 건너뛴다.
+- 말한 소리를 서버도 기기 인식기도 판정하지 못하면(서버 실패 + whisper 없음/실패) 그 단어는 **건너뛰고 아무도 카드를 갖지 않는다**.
+  아무 소리나 통과시키지 않는다. 처음부터 들을 수단이 없으면(마이크 없음·거부, file://에 키 없음) 그림 누르기 모드.
+
+## 말하기 차례 (파닉스 공통 규칙, 2026-11-22 · phonics-kit README)
+- 버튼을 누른 친구의 말하기 차례 내내 **JUMP**(Match와 같은 초록 버튼, 점프하는 아이 아이콘)가 튜터 입 옆, 말하는 친구 쪽에 튀어 오른다.
+  누르면 그 단어를 건너뛴다 — 정답을 보여 주고 **아무도 카드를 갖지 않는다**.
+- 다른 그림을 분명히 말함 → 바로 상대에게 기회(경주 규칙). 알아듣기 어려운 말 2번 → "Good try!" 하고 상대에게 기회.
+- 침묵 → "Say it!" 한 번 더, 약 20초(6초 + 11초) 동안 말이 없으면 상대에게 기회. 게임마다 첫 조용한 차례에 한 번,
+  말하는 친구의 장갑이 JUMP를 두 번 톡톡 + "넘어가고 싶으면 점프 버튼을 눌러!".
+- 게임이 끝나면 공통 기록 `phonics.progress`(`js/phonics-progress.js` = phonics-kit 사본)에 `eye-catch`로 저장:
+  p1·p2(카드 수), cards, winner(1/2, 비김 0), rounds, words(말해서 맞힌 수), jumps, time(첫 카드부터 초). 기록만, 레벨 선택 없음.
 
 ## 실행
 - `실행.command` 더블클릭 (또는 `python3 tools/serve.py 5261` → http://127.0.0.1:5261/). 크롬 권장.
 - 마이크·음성인식은 http(s)에서만 된다. `index.html` 을 파일로 열면(file://) 버튼을 누른 친구가 **그림을 눌러** 답한다.
 - 키보드: 1번 친구 `A`/`←`, 2번 친구 `L`/`→`, 타이틀에서 `Space` = 시작.
-- URL 옵션: `?fast=1`(규칙 설명 생략) `?tap=1`(그림 누르기 모드) `?fake=1`(QA: `__ec.fake.push('ok'|'wrong'|'unclear'|'silence')`)
+- URL 옵션: `?fast=1`(규칙 설명 생략) `?tap=1`(그림 누르기 모드) `?fake=1`(QA: `__ec.fake.push('ok'|'wrong'|'unclear'|'silence'|'nojudge'|'hold')`, hold = 30초 대기 → JUMP 시험)
   `?answer=moon`(첫 라운드 정답 고정) `?log=1`(인식 결과 콘솔 출력).
 
 ## 구조 (빌드 없음, Vanilla JS)
@@ -40,7 +51,7 @@
 - `js/art.js`, `assets/img/*` ← `tools/cut_sprites.py`(목업에서 START·match!·아바타 컷) → `tools/build_art.py` (배경·로고 = 사용자 파일 `design/eyecatch_bg.png`, `eyecatch_logo.png`)
 - `js/voice.js`, `js/voice-data.js`, `assets/voice/*` ← `zsh -ic '/Users/jini/.local/bin/uv run --with numpy python tools/build_voice.py'`
   - 단어·/m/ 음가: lesson pack 음성(mirror·mitt·mushroom은 pack의 WAV, 나머지 공식 MP3).
-  - 튜터 대사 EN/KO 23쌍: 사내 TTS `qwen-tts` aiden (회사망/VPN). 되읽기 검사: `~/.claude/skills/video-vision/.venv/bin/python tools/voice_check.py`
+  - 튜터 대사 EN/KO 25쌍: 사내 TTS `qwen-tts` aiden (회사망/VPN). 되읽기 검사: `~/.claude/skills/video-vision/.venv/bin/python tools/voice_check.py`
 - `js/bgm-data.js`, `assets/audio/bgm.mp3` ← `uv run --with numpy --with scipy python tools/make_bgm.py` (자체 합성, D장조 112 BPM)
 
 ## QA (headless, Playwright 1.62)

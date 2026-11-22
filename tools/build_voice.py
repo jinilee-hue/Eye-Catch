@@ -60,6 +60,9 @@ LINES = {
     'playagain': 'Play again?',
     'micask': 'Please allow the microphone.',
     'pressstart': 'Press start!',
+    # the say turn (phonics-kit README "공통 규칙" 2-3, the same lines as Phonics Match): the JUMP button's guide, two unclear tries
+    'jump': 'Want to skip? Tap the jump button!',
+    'goodtry': 'Good try!',
 }
 LINES_KO = {
     'hello': '안녕! 아이캐치 놀이 하자!',
@@ -85,6 +88,8 @@ LINES_KO = {
     'playagain': '한 번 더 할까?',
     'micask': '마이크를 허용해 줘.',
     'pressstart': '시작 버튼을 눌러 봐!',
+    'jump': '넘어가고 싶으면 점프 버튼을 눌러!',
+    'goodtry': '좋아, 잘했어!',
 }
 assert set(LINES) == set(LINES_KO), set(LINES) ^ set(LINES_KO)
 

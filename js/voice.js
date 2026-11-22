@@ -219,6 +219,18 @@ window.EC_VOICE = {
 1.334,
 1.08
 ],
+"t:jump": [
+"t_jump.mp3",
+0.0,
+1.105,
+2.52
+],
+"t:goodtry": [
+"t_goodtry.mp3",
+0.0,
+0.764,
+0.89
+],
 "k:hello": [
 "k_hello.mp3",
 0.0,
@@ -356,6 +368,18 @@ window.EC_VOICE = {
 0.0,
 1.33,
 1.53
+],
+"k:jump": [
+"k_jump.mp3",
+0.0,
+1.327,
+2.24
+],
+"k:goodtry": [
+"k_goodtry.mp3",
+0.0,
+0.965,
+1.58
 ]
 },
 "lines": {
@@ -381,7 +405,9 @@ window.EC_VOICE = {
 "draw": "It's a tie! Great game!",
 "playagain": "Play again?",
 "micask": "Please allow the microphone.",
-"pressstart": "Press start!"
+"pressstart": "Press start!",
+"jump": "Want to skip? Tap the jump button!",
+"goodtry": "Good try!"
 },
 "lines_ko": {
 "hello": "안녕! 아이캐치 놀이 하자!",
@@ -406,7 +432,9 @@ window.EC_VOICE = {
 "draw": "비겼어! 둘 다 잘했어!",
 "playagain": "한 번 더 할까?",
 "micask": "마이크를 허용해 줘.",
-"pressstart": "시작 버튼을 눌러 봐!"
+"pressstart": "시작 버튼을 눌러 봐!",
+"jump": "넘어가고 싶으면 점프 버튼을 눌러!",
+"goodtry": "좋아, 잘했어!"
 },
 "wordSource": {
 "man": "FP.K.U1L1 pack (mp3)",

@@ -5,7 +5,8 @@
  * the child's audio never leaves the page. Needs http(s): from file:// there is no worker, and the game lets the
  * player tap the picture instead.
  *
- * judge(pcm16k, target, rivals) -> 'ok' | 'wrong' | 'unclear' | null (no recogniser)
+ * judge(pcm16k, target, rivals) -> 'ok' | 'wrong' | 'unclear' | null (no recogniser, or its check failed / timed out:
+ *   can't judge — the game skips the word with no card, phonics-kit README rule 5)
  *   ok      = the worker's reading check passes, or the target scores best of all the pictures on the table
  *   wrong   = it heard another picture's word (exactly, or that word clearly beats the target)
  *   unclear = speech, but neither
@@ -54,7 +55,7 @@
     if (STT.state !== 'ready') return null;
     const r = await check(pcm16k, target, SAME[target] || [], rivals);
     STT.last = r && { target, ...r };
-    if (!r) return 'unclear';
+    if (!r) return null;                                 // the check failed: can't judge (not 'unclear')
     if (said(target, r.text)) return 'ok';
     const other = rivals.find(w => said(w, r.text));
     if (other) return 'wrong';

@@ -3,7 +3,11 @@
  * recogniser (on-device whisper, js/stt.js) checks it. Right -> you take the left card, the right card slides over
  * and a new one comes from the deck. Wrong -> the other player gets the chance. 10 cards; most cards wins.
  * Without a microphone / recogniser (file://, mic refused) the player who pressed taps the picture instead.
- * Test hooks: window.__ec; URL ?fast=1 (no rule demo), ?tap=1 (tap mode), ?fake=1 (scripted verdicts: __ec.fake.push('ok'|'wrong'|'unclear'|'silence')).
+ * The say turn follows the phonics games' common rules (phonics-kit README "공통 규칙"): a JUMP button skips the word
+ * (nobody gets the card), two unclear tries end it ("Good try!"), ~20 s of silence ends it, a word that can't be
+ * judged skips it with no card. A finished game is saved to the shared record (js/phonics-progress.js, 'eye-catch').
+ * Test hooks: window.__ec; URL ?fast=1 (no rule demo), ?tap=1 (tap mode), ?fake=1 (scripted verdicts:
+ * __ec.fake.push('ok'|'wrong'|'unclear'|'silence'|'nojudge'|'hold') — 'hold' = no verdict for 30 s, to press JUMP).
  */
 (function () {
   'use strict';
@@ -101,7 +105,7 @@
   function showTitle() {
     G.tok++; G.screen = 'title'; G.phase = 'idle';
     stage.dataset.screen = 'title';
-    clearTimers();
+    clearTimers(); dropJump();
     $('#result').classList.remove('show'); if (window.Crown3D) Crown3D.hide();
     S.stopVoice();
     disposeGameCards(); Card3D.hideDeck(); Card3D.ambient(false);
@@ -185,11 +189,12 @@
     firstTouch();
     const tok = ++G.tok;
     G.screen = 'game'; G.phase = 'intro'; G.scores = [0, 0]; G.r = 0; G.locked = [false, false]; G.pressed = [false, false];
+    G.said = 0; G.jumps = 0; G.jumpTold = false; G.t0 = 0;   // for the record (finish) and the JUMP guide (once a game)
     clearTimers(); S.stopVoice();
     stage.dataset.screen = 'game';
     $('#result').classList.remove('show'); if (window.Crown3D) Crown3D.hide();
     clearTitleCards(); disposeGameCards(); Tin3D.show(false); Card3D.ambient(true, ...DECK);
-    resetBuzzers(); renderScores(); hideWord();
+    resetBuzzers(); renderScores(); hideWord(); dropJump();
     G.deck = Cards.makeDeck(ROUNDS + 1, Q.get('answer'));
     setDeckN(ROUNDS + 1);
     mon.setShadow(false); mon.lookAt(null); mon.rest = 'up'; mon.pose('up'); mon.setGrip(false);
@@ -213,6 +218,7 @@
     mon.hop(1);
     await S.say('t:ready');
     if (!alive(tok)) return;
+    G.t0 = performance.now();
     round(tok);
   }
 
@@ -283,7 +289,7 @@
         // the server heard another picture: the turn is lost only when the on-device recogniser hears another picture
         // too; if it heard the right word the answer stands, otherwise the player says it once more (user: "머그도 잘
         // 안되는데", "mitt도", "map도" — a misheard right word ended the turn at once)
-        if (j.verdict === 'wrong') { const d = await dev; STT.last.dev = d; return d === 'ok' ? 'ok' : d === 'wrong' ? 'wrong' : 'unclear'; }
+        if (j.verdict === 'wrong') { const d = await dev; if (STT.last) STT.last.dev = d; return d === 'ok' ? 'ok' : d === 'wrong' ? 'wrong' : 'unclear'; }
         const dt = j.d[target], dr = Math.min(...rv.filter(w => j.d[w] != null).map(w => j.d[w]), Infinity);
         // the picture its phonemes are nearest to, among the pictures on the table (looser since the user's
         // "너무 엄격한거 아냐??": any lead, up to 1.3 sounds off per sound). With the kit's near sounds and the 'wrong'
@@ -333,42 +339,93 @@
     const res = await answerTurn(p, tok);
     if (!alive(tok)) return;
     setBuzz(p, 'down', false); setBuzz(p, 'listen', false); setBuzz(p, 'thinking', false); plateEl[p].classList.remove('turn');
-    if (res === 'ok') await win(p, tok); else await miss(p, tok);
+    if (res === 'ok') await win(p, tok);
+    else if (res === 'jump' || res === 'nojudge') { if (res === 'jump') G.jumps++; await nobody(tok); }   // nobody gets the card
+    else await miss(p, tok, res);
   }
 
-  /** 'ok' | 'wrong' */
+  /** 'ok' | 'wrong' (another picture) | 'goodtry' (two unclear tries) | 'silent' | 'jump' | 'nojudge' (couldn't be judged) */
   async function answerTurn(p, tok) {
+    // tap mode = this device can't hear words at all (no microphone / refused, file:// without a key, ?tap=1): the
+    // player who pressed taps the picture — a non-speaking mode, decided before anyone speaks
     const useMic = !Q.has('tap') && (Q.has('fake') || (Mic.state === 'on' && (STT.state !== 'error' || PhonicsAPI.usable())));
     if (!useMic) return tapTurn(p, tok);
     try { return await micTurn(p, tok); } finally { S.setListening(false); }   // the music comes back however it ends
   }
+  // The say turn, on the phonics games' common rules (phonics-kit README "공통 규칙: 설명 SKIP · 말하기 차례"; Phonics
+  // Match sayItTurn): JUMP shows the whole turn and skips the word — nobody gets the card; two unclear tries -> "Good try!"
+  // and the turn is over; silence -> "Say it!" once and a longer wait (~20 s in all), quiet again -> the turn is over;
+  // the first quiet turn of a game shows JUMP (the glove taps it, "Want to skip? Tap the jump button!"). A clearly
+  // different picture still loses the turn at once (the race's own rule). A spoken word that neither the phonics-api
+  // nor the on-device recogniser could judge is skipped with no card — a sound is never passed unheard.
+  let jumpNow = null, jumpTurn = 0;                  // set while a say turn can be jumped; the turn it belongs to
+  const jumpEl = $('#btnJump'), jumpHand = $('#jumpHand');
+  function showJump(p, on) {
+    jumpEl.classList.remove('show', 'poke', 'p1', 'p2'); jumpHand.classList.remove('guide', 'p1', 'p2');
+    if (!on) return;
+    jumpEl.classList.add(p ? 'p2' : 'p1'); jumpHand.classList.add(p ? 'p2' : 'p1');
+    void jumpEl.offsetWidth; jumpEl.classList.add('show');
+  }
+  function dropJump() { jumpTurn++; jumpNow = null; showJump(0, false); }   // leaving a game: no say turn any more
+  /** once a game, on the first quiet say turn: the speaking player's glove taps JUMP twice (it hops) while the tutor says it */
+  async function jumpGuide(p) {
+    const h = buzzEl[p].querySelector('.hand');      // the 3D glove js/hand3d.js drew for this player
+    if (h && h.src) { jumpHand.src = h.src; ['--tx', '--ty'].forEach(v => jumpHand.style.setProperty(v, h.style.getPropertyValue(v))); }
+    jumpHand.classList.remove('guide'); void jumpHand.offsetWidth; jumpHand.classList.add('guide');
+    const hop = () => { if (!jumpEl.classList.contains('show')) return; jumpEl.classList.remove('poke'); void jumpEl.offsetWidth; jumpEl.classList.add('poke'); S.sfx('tap'); };
+    const t1 = setTimeout(hop, 2400 * 0.34), t2 = setTimeout(hop, 2400 * 0.56);
+    mon.hop(1);
+    try { await Promise.all([S.say('t:jump'), wait(2400)]); } finally { clearTimeout(t1); clearTimeout(t2); jumpHand.classList.remove('guide'); }
+  }
   async function micTurn(p, tok) {
-    for (let t = 0; t < 2; t++) {
-      setBuzz(p, 'listen', true); S.setListening(true);
-      let verdict;
-      if (Q.has('fake')) {
-        await wait(700); verdict = fake.length ? fake.shift() : 'ok';
-      } else {
-        const r = await Mic.listen({ waitMs: t ? 5000 : 4200, onLevel: v => buzzEl[p].style.setProperty('--lv', v.toFixed(2)), aborted: () => !alive(tok) });
+    let jumped = false, onJump;
+    const jumpP = new Promise(r => { onJump = r; });
+    const race = pr => Promise.race([pr, jumpP]);    // every wait in the turn ends at once on JUMP
+    const my = ++jumpTurn;
+    jumpNow = () => { if (jumped) return; jumped = true; jumpNow = null; S.sfx('tap'); S.stopVoice(); onJump('jump'); };
+    showJump(p, true);
+    let misses = 0, quiet = 0;
+    try {
+      for (let t = 0; t < 4; t++) {                  // at most 3 listens (2 quiet, 2 unclear, or one of each + one): never a loop
+        setBuzz(p, 'listen', true); S.setListening(true);
+        let verdict;
+        if (Q.has('fake')) {
+          const f = await race(wait(700).then(() => fake.length ? fake.shift() : 'ok'));
+          verdict = f === 'hold' ? await race(wait(30000).then(() => 'silence')) : f === 'nojudge' ? null : f;
+        } else {
+          const r = await Mic.listen({ waitMs: quiet ? 11000 : 6000, onLevel: v => buzzEl[p].style.setProperty('--lv', v.toFixed(2)), aborted: () => !alive(tok) || jumped });
+          if (!alive(tok)) return 'wrong';
+          if (jumped) return 'jump';
+          if (r.kind === 'nomic') return tapTurn(p, tok);   // the microphone went away: tap mode from here
+          if (r.kind === 'silence') verdict = 'silence';
+          else if (r.kind === 'speech') {
+            setBuzz(p, 'listen', false); setBuzz(p, 'thinking', true);
+            const pcm = await Mic.prepare(r.pcm, r.sr);
+            verdict = await race(judgeSpeech(pcm));
+            setBuzz(p, 'thinking', false);
+            if (Q.has('log')) console.log('heard', STT.last);
+          } else return 'wrong';
+        }
+        setBuzz(p, 'listen', false); setBuzz(p, 'thinking', false); S.setListening(false);
         if (!alive(tok)) return 'wrong';
-        if (r.kind === 'nomic') return tapTurn(p, tok);
-        if (r.kind === 'silence') verdict = 'silence';
-        else if (r.kind === 'speech') {
-          setBuzz(p, 'listen', false); setBuzz(p, 'thinking', true);
-          const pcm = await Mic.prepare(r.pcm, r.sr);
-          verdict = await judgeSpeech(pcm);
-          setBuzz(p, 'thinking', false);
-          if (verdict === null) return tapTurn(p, tok);
-          if (Q.has('log')) console.log('heard', STT.last);
-        } else return 'wrong';
+        if (jumped || verdict === 'jump') return 'jump';
+        if (verdict === null) return 'nojudge';      // no judge could hear it: skip, no card (never pass on a sound)
+        if (verdict === 'ok') { G.said++; return 'ok'; }
+        if (verdict === 'wrong') return 'wrong';
+        if (verdict === 'silence') {
+          if (++quiet >= 2) return 'silent';
+          if (!G.jumpTold) { G.jumpTold = true; await race(jumpGuide(p)); if (!alive(tok)) return 'wrong'; if (jumped) return 'jump'; }
+          mon.hop(1);
+          await race(S.say('t:sayit'));
+        } else {                                     // unclear: speech, but not the word nor another picture
+          if (++misses >= 2) return 'goodtry';
+          await race(S.say('t:again'));
+        }
+        if (!alive(tok)) return 'wrong';
+        if (jumped) return 'jump';
       }
-      setBuzz(p, 'listen', false); S.setListening(false);
-      if (!alive(tok)) return 'wrong';
-      if (verdict === 'ok') return 'ok';
-      if (verdict === 'wrong') return 'wrong';
-      if (t === 0) { await S.say(verdict === 'silence' ? 't:sayit' : 't:again'); if (!alive(tok)) return 'wrong'; }
-    }
-    return 'wrong';
+      return 'goodtry';
+    } finally { if (my === jumpTurn) { jumpNow = null; showJump(p, false); } }   // a late end of a left game leaves a new turn alone
   }
 
   /** no microphone: tap the picture (picked on the 3D cards) */
@@ -441,11 +498,13 @@
     hideWord();
     await next(tok);
   }
-  async function miss(p, tok) {
+  /** why: 'wrong' (another picture: "Oops!") | 'goodtry' (two unclear tries: "Good try!") | 'silent' (quiet ~20 s: no line) */
+  async function miss(p, tok, why = 'wrong') {
     G.locked[p] = true;
-    S.sfx('wrong'); mon.oops();
     buzzEl[p].classList.add('locked');
-    await S.say('t:oops'); if (!alive(tok)) return;
+    if (why === 'wrong') { S.sfx('wrong'); mon.oops(); await S.say('t:oops'); }
+    else if (why === 'goodtry') { mon.hop(1); await S.say('t:goodtry'); }
+    if (!alive(tok)) return;
     const o = 1 - p;
     if (!G.locked[o]) {
       G.phase = 'race';
@@ -539,6 +598,12 @@
     if (win < 0 && window.Crown3D) Crown3D.hide();
     S.sfx('win'); FX.confetti(110); FX.fireworks(7, 3600);
     mon.cheer(); mon.lookAt(win < 0 ? null : win ? 2150 : 250, 300);
+    // the shared record of the phonics games (phonics-kit F1, records only — no level select): cards per player,
+    // winner (1 / 2, 0 = a tie), words said right, words jumped, play time from the first deal
+    try {
+      if (window.PhonicsProgress) PhonicsProgress.played('eye-catch', { p1: a, p2: b, cards: a + b, winner: win + 1, rounds: ROUNDS,
+        words: G.said, jumps: G.jumps, time: G.t0 ? Math.round((performance.now() - G.t0) / 100) / 10 : null });
+    } catch (e) { console.warn('progress', e); }
     await wait(600); if (!alive(tok)) return;
     await S.say(win < 0 ? 't:draw' : win ? 't:win2' : 't:win1'); if (!alive(tok)) return;
     await wait(500);
@@ -555,6 +620,7 @@
   });
   $('#btnStart').addEventListener('click', () => { S.sfx('pop'); startGame(); });
   $('#btnSkip').addEventListener('click', (e) => { e.stopPropagation(); if (G.skipTeach) return; G.skipTeach = true; S.sfx('tap'); S.stopVoice(); });
+  jumpEl.addEventListener('click', (e) => { e.stopPropagation(); if (jumpNow) jumpNow(); });
   $('#btnAgain').addEventListener('click', () => { S.sfx('pop'); startGame(); });
   // Exit (user: "인트로에도 나가기 버튼은 있어야해"): game / result -> the title; on the title it leaves the game like
   // Croco Phonics / Magic Block: back to the page it came from, else close the tab, else reload
@@ -586,6 +652,6 @@
   requestAnimationFrame(tick);
   if (Q.has('tap')) Mic.state = 'none';
   PhonicsAPI.init().then(showApi);
-  window.__ec = { G, buzz, startGame, showTitle, fake, mon, M3, wait, held, judgeSpeech };
+  window.__ec = { G, buzz, startGame, showTitle, fake, mon, M3, wait, held, judgeSpeech, jump: () => jumpNow && jumpNow() };
   window.__ready = true;
 })();
