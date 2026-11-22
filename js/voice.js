@@ -3,6 +3,12 @@ window.EC_VOICE = {
 "voice": "en-US-AvaMultilingualNeural",
 "engine": "phonics-api",
 "clips": {
+"w:mail": [
+"w_mail.mp3",
+0.42,
+0.404,
+1.03
+],
 "w:man": [
 "w_man.mp3",
 0.43,
@@ -15,11 +21,35 @@ window.EC_VOICE = {
 0.484,
 0.97
 ],
+"w:mask": [
+"w_mask.mp3",
+0.42,
+0.586,
+1.09
+],
+"w:mat": [
+"w_mat.mp3",
+0.42,
+0.685,
+1.06
+],
+"w:match": [
+"w_match.mp3",
+0.0,
+1.307,
+1.16
+],
 "w:meat": [
 "w_meat.mp3",
 0.42,
 0.457,
 1.05
+],
+"w:mice": [
+"w_mice.mp3",
+0.43,
+0.573,
+1.03
 ],
 "w:milk": [
 "w_milk.mp3",
@@ -62,6 +92,12 @@ window.EC_VOICE = {
 0.44,
 0.594,
 0.95
+],
+"w:mouth": [
+"w_mouth.mp3",
+0.43,
+0.61,
+1.03
 ],
 "w:mug": [
 "w_mug.mp3",
@@ -437,9 +473,14 @@ window.EC_VOICE = {
 "goodtry": "좋아, 잘했어!"
 },
 "wordSource": {
+"mail": "FP.K.U1L1 pack (mp3)",
 "man": "FP.K.U1L1 pack (mp3)",
 "map": "FP.K.U1L1 pack (mp3)",
+"mask": "FP.K.U1L1 pack (mp3)",
+"mat": "FP.K.U1L1 pack (mp3)",
+"match": "FP.K.U1L1 pack (wav)",
 "meat": "FP.K.U1L1 pack (mp3)",
+"mice": "FP.K.U1L1 pack (mp3)",
 "milk": "FP.K.U1L1 pack (mp3)",
 "mirror": "FP.K.U1L1 pack (wav)",
 "mitt": "FP.K.U1L1 pack (wav)",
@@ -447,6 +488,7 @@ window.EC_VOICE = {
 "moon": "FP.K.U1L1 pack (mp3)",
 "mop": "FP.K.U1L1 pack (mp3)",
 "mouse": "FP.K.U1L1 pack (mp3)",
+"mouth": "FP.K.U1L1 pack (mp3)",
 "mug": "FP.K.U1L1 pack (mp3)",
 "mushroom": "FP.K.U1L1 pack (wav)"
 }

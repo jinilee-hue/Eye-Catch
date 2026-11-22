@@ -3,7 +3,7 @@
 두 장의 카드에 **딱 하나** 같은 그림이 있다. 먼저 찾은 친구가 **자기 버튼을 누르고 단어를 말하면** 튜터(눈 하나 외계인)가
 회사 phonics-api(키가 있을 때) 또는 기기 안 음성인식으로 확인하고, 맞으면 왼쪽 카드를 가져간다. 틀리면 상대에게 기회.
 10장, 많이 가진 친구가 승리.
-단어·그림·단어 음성: lesson pack `FP.K.U1L1`(공통자료) 12단어 — man map meat milk mirror mitt monkey moon mop mouse mug mushroom.
+단어·그림·단어 음성: lesson pack `FP.K.U1L1`(공통자료)의 m단어 18개(대명사 my 제외) — mail man map mask mat match meat mice milk mirror mitt monkey moon mop mouse mouth mug mushroom. 한 판에 두 카드로 11개가 보인다.
 
 ## 발음 판정 = phonics-api (파닉스 공통 규칙, 2026-11-19)
 - 타이틀 왼쪽 위 열쇠 버튼 → 키 입력(기기마다 한 번, `localStorage.phonics_api_key`). 점: 민트 = 회사 서버가 판정, 모래색 = 기기 안 판정.
@@ -43,7 +43,7 @@
 | `js/sdf.js` | SDF + Surface Nets 메셔 (Croco Phonics) |
 | `js/mic.js` | 마이크(시작 때 1회 권한), 버튼 누르기 0.7초 전부터 듣는 링버퍼, 음성 구간 검출, 16 kHz 변환 |
 | `js/phonics-api.js` | phonics-kit 사본(고치지 말고 kit을 고친 뒤 다시 복사): 키·서버 상태·analyze·판정·키 입력 창 |
-| `js/stt.js` + `js/stt-worker.js` + `stt/` | 백업 판정: 기기 안 whisper tiny.en (Phonics Match 워커 재사용). 화면의 12그림 중 정답이 가장 잘 맞아야 통과 |
+| `js/stt.js` + `js/stt-worker.js` + `stt/` | 백업 판정: 기기 안 whisper tiny.en (Phonics Match 워커 재사용). 들린 글자에 정답 단어가 있어야 통과 |
 | `js/audio.js` | 튜터 음성(base64), 효과음 합성, 배경음악, 입모양용 음량 |
 
 ## 생성물 (손으로 고치지 말 것)
@@ -57,10 +57,10 @@
 
 ## QA (headless, Playwright 1.62)
 - `uv run --with playwright==1.62.0 python tools/qa/flow.py <out> [W H]` — 10라운드 전체 + 기회 넘김 + 아무도 못 맞힌 라운드 + 결과/다시하기/홈
-- `uv run --with playwright==1.62.0 python tools/qa/stt_check.py` — 12단어 녹음 × 12정답 판정표 (대각선만 OK여야 함) + 단어가 아닌 소리
+- `uv run --with playwright==1.62.0 python tools/qa/stt_check.py` — 단어 녹음 × 정답 판정표 (대각선만 OK여야 함) + 단어가 아닌 소리
 - `uv run --with playwright==1.62.0 python tools/qa/say_flow.py dev/say/moon.wav moon ok [api|device]` — 마이크 경로 전체(getUserMedia만 WAV 재생 스트림으로 대체:
   에이전트에서 띄운 헤드리스 크롬은 macOS 개인정보 보호 때문에 가짜 장치도 못 연다). api = `~/.config/phonics-api/key`를 이 브라우저에 넣음, device = 키 없이 whisper
-- `node ../phonics-kit/tools/qa_judge.mjs` — phonics-api 판정 규칙: 12단어 × (pack 녹음 + TTS 4목소리) + 단어가 아닌 소리
+- `node ../phonics-kit/tools/qa_judge.mjs` — phonics-api 판정 규칙: 단어 × (pack 녹음 + TTS 4목소리) + 단어가 아닌 소리
 - `uv run --with playwright==1.62.0 --with pillow python tools/qa/monster_cmp.py <out> "pose=hold"` — 3D 튜터 vs 목업 나란히
 
 ## 주의

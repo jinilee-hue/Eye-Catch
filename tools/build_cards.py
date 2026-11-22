@@ -1,5 +1,6 @@
-"""Card pictures + word list: FPR K Unit 1 Lesson 1 (Mm) — the 12 m-words of the lesson the game has always used
-(the same set as Croco Phonics level 1). Source = the lesson pack (Phonics/공통자료/FP.K.U1L1-lesson-pack, read through
+"""Card pictures + word list: FPR K Unit 1 Lesson 1 (Mm) — all 18 m-words of the lesson pack (user 2026-11-22: the games use
+the lesson pack, so 18 like Puzzle and Magic Block — mail mask mat match mice mouth joined the first 12; 'my' has no picture
+to find). Source = the lesson pack (Phonics/공통자료/FP.K.U1L1-lesson-pack, read through
 phonics-kit/tools/lessonpack.py): its pictures are the representative images (공통이미지자료/FPR K_U1,2 대표이미지).
 Each picture is trimmed to its alpha box (moon keeps its square night sky) -> assets/cards/<w>.webp (max 420 px)
 + js/words.js (with `ph`, the expected phonemes the phonics-api judge compares with) + js/cards-art.js (data URLs).
@@ -14,7 +15,8 @@ sys.path.insert(0, str(KIT / 'tools'))
 import lessonpack  # noqa: E402
 
 TB = 'FP.K.U1L1'
-WORDS = 'man map meat milk mirror mitt monkey moon mop mouse mug mushroom'.split()
+WORDS = 'mail man map mask mat match meat mice milk mirror mitt monkey moon mop mouse mouth mug mushroom'.split()
+assert len(WORDS) == 18
 OUT = ROOT / 'assets/cards'
 OUT.mkdir(parents=True, exist_ok=True)
 

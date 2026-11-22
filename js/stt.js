@@ -47,7 +47,7 @@
     });
   }
   const words = s => (String(s).toLowerCase().match(/[a-z]+/g) || []);
-  const SAME = { meat: ['meet'], mitt: ['mit', 'mitts'], mouse: ['mice'], man: ['men'], monkey: ['monkeys'], mushroom: ['mushrooms'], mirror: ['mirrors'], moon: ['moons'], milk: ['milks'], mug: ['mugs', 'muck', 'mugg'], map: ['maps'], mop: ['mops'] };
+  const SAME = { meat: ['meet'], mitt: ['mit', 'mitts'], mouse: ['mouses'], man: ['men'], mail: ['mails', 'male'], mask: ['masks'], mat: ['mats', 'matt'], match: ['matches'], mice: [], mouth: ['mouths'], monkey: ['monkeys'], mushroom: ['mushrooms'], mirror: ['mirrors'], moon: ['moons'], milk: ['milks'], mug: ['mugs', 'muck', 'mugg'], map: ['maps'], mop: ['mops'] };
   const said = (w, text) => { const ws = words(text); return ws.includes(w) || (SAME[w] || []).some(x => ws.includes(x)); };
 
   STT.judge = async function (pcm16k, target, rivals) {

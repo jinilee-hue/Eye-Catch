@@ -1,6 +1,6 @@
-/* Eye Catch — cards. 12 pictures (FPR K Unit 1 Lesson 1), 6 on a card.
+/* Eye Catch — cards. 18 pictures (FPR K Unit 1 Lesson 1, the lesson pack's m-words), 6 on a card.
  * The deck is a chain: card i and card i+1 share exactly ONE picture (the round's answer): card i+1 = one picture
- * of card i + five of the six pictures card i doesn't have. Answers are spread evenly over the 12 words.
+ * of card i + five of the six pictures card i doesn't have. Answers are spread evenly over the words.
  * The cards themselves are 3D (js/card3d.js).
  */
 (function () {

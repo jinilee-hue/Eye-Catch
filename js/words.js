@@ -9,6 +9,17 @@ window.EC_WORDS = {
  "sound": "m",
  "words": [
   {
+   "w": "mail",
+   "ko": "우편물",
+   "ph": [
+    "m",
+    "ey",
+    "l"
+   ],
+   "img": "assets/cards/mail.webp",
+   "ar": 1.304
+  },
+  {
    "w": "man",
    "ko": "남자",
    "ph": [
@@ -31,6 +42,40 @@ window.EC_WORDS = {
    "ar": 1.826
   },
   {
+   "w": "mask",
+   "ko": "가면",
+   "ph": [
+    "m",
+    "ae",
+    "s",
+    "k"
+   ],
+   "img": "assets/cards/mask.webp",
+   "ar": 1.167
+  },
+  {
+   "w": "mat",
+   "ko": "매트",
+   "ph": [
+    "m",
+    "ae",
+    "t"
+   ],
+   "img": "assets/cards/mat.webp",
+   "ar": 1.826
+  },
+  {
+   "w": "match",
+   "ko": "성냥",
+   "ph": [
+    "m",
+    "ae",
+    "ch"
+   ],
+   "img": "assets/cards/match.webp",
+   "ar": 0.933
+  },
+  {
    "w": "meat",
    "ko": "고기",
    "ph": [
@@ -40,6 +85,17 @@ window.EC_WORDS = {
    ],
    "img": "assets/cards/meat.webp",
    "ar": 1.424
+  },
+  {
+   "w": "mice",
+   "ko": "쥐",
+   "ph": [
+    "m",
+    "ay",
+    "s"
+   ],
+   "img": "assets/cards/mice.webp",
+   "ar": 1.561
   },
   {
    "w": "milk",
@@ -121,6 +177,17 @@ window.EC_WORDS = {
    ],
    "img": "assets/cards/mouse.webp",
    "ar": 1.261
+  },
+  {
+   "w": "mouth",
+   "ko": "입",
+   "ph": [
+    "m",
+    "aw",
+    "dh"
+   ],
+   "img": "assets/cards/mouth.webp",
+   "ar": 1.4
   },
   {
    "w": "mug",
