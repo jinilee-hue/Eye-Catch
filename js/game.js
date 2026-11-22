@@ -7,6 +7,7 @@
  * The say turn follows the phonics games' common rules (phonics-kit README "공통 규칙"): a JUMP button skips the word
  * (nobody gets the card), two unclear tries end it ("Good try!"), ~20 s of silence ends it, a word that can't be
  * judged skips it with no card. A finished game is saved to the shared record (js/phonics-progress.js, 'eye-catch').
+ * Every card won goes into MY CARDS (the title's album button; localStorage 'ecAlbum'); the result shows 0–3 stars each.
  * Test hooks: window.__ec; URL ?fast=1 (no rule demo), ?tap=1 (as if there were no microphone), ?fake=1 (scripted verdicts:
  * __ec.fake.push('ok'|'wrong'|'unclear'|'silence'|'nojudge'|'hold') — 'hold' = no verdict for 30 s, to press JUMP).
  */
@@ -471,6 +472,7 @@
   async function win(p, tok) {
     G.phase = 'reveal';
     const w = answer();
+    addToAlbum(w);                                 // said right: into MY CARDS (stays there even if the card goes back later)
     hitCards([G.left, G.right], w);
     mon.cheer(); mon.lookAt(null); Card3D.burst();
     FX.ribbon(...SLOT.L, 520); setTimeout(() => FX.ribbon(...SLOT.R, 520), 160);
@@ -594,6 +596,9 @@
     [G.left, G.right].forEach(c => c && c.alive && c.dispose()); G.left = G.right = null; unhit(); Card3D.hideDeck();   // the won piles stay on the table
     const [a, b] = G.scores, win = a === b ? -1 : a > b ? 0 : 1;
     $('#res1').textContent = a; $('#res2').textContent = b;
+    // stars 0–3 per player by the cards won: 0 -> 0, 1–2 -> 1, 3–4 -> 2, 5+ -> 3
+    const stars = [a, b].map(n => n >= 5 ? 3 : n >= 3 ? 2 : n >= 1 ? 1 : 0);
+    document.querySelectorAll('.res-p').forEach((e, i) => e.querySelectorAll('.res-stars i').forEach((s, j) => s.classList.toggle('on', j < stars[i])));
     document.querySelectorAll('.res-p').forEach((e, i) => e.classList.toggle('win', i === win));
     // screen words stay English in both languages; EN | 한 switches the voice only (user 2026-11-22: "화면 글자는 모두 영어로")
     const T = ['Player 1 wins!', 'Player 2 wins!', "It's a tie!"];
@@ -609,7 +614,7 @@
     // the shared record of the phonics games (phonics-kit F1, records only — no level select): cards per player,
     // winner (1 / 2, 0 = a tie), words said right, words jumped, cards given back for a wrong word, play time from the first deal
     try {
-      if (window.PhonicsProgress) PhonicsProgress.played('eye-catch', { p1: a, p2: b, cards: a + b, winner: win + 1, rounds: G.rounds,
+      if (window.PhonicsProgress) PhonicsProgress.played('eye-catch', { p1: a, p2: b, stars1: stars[0], stars2: stars[1], cards: a + b, winner: win + 1, rounds: G.rounds,
         words: G.said, jumps: G.jumps, lost: G.lost[0] + G.lost[1], time: G.t0 ? Math.round((performance.now() - G.t0) / 100) / 10 : null });
     } catch (e) { console.warn('progress', e); }
     await wait(600); if (!alive(tok)) return;
@@ -618,10 +623,45 @@
     S.say('t:playagain');
   }
 
+  // ── MY CARDS (title): every card won — its word said right — goes into this device's album, { word: times won }.
+  // A card given back for a wrong word (loseCard) stays in it: the album is the words you have said right.
+  // The 18 words as round cards (sky / pink by turns, like the piles), "×N" on each one won, a '?' slot for the rest;
+  // tap one = "/m/ /m/ word"
+  const ALBUM = 'ecAlbum', albumEl = $('#album');
+  let album = {};
+  try { album = JSON.parse(localStorage.getItem(ALBUM) || '{}') || {}; } catch (e) { album = {}; }
+  function addToAlbum(w) {
+    album[w] = (album[w] || 0) + 1;
+    try { localStorage.setItem(ALBUM, JSON.stringify(album)); } catch (e) { /* storage off: this visit only */ }
+  }
+  // the title in the logo's candy colours, letter by letter
+  const TITLE_C = [['--p1', '--p1-deep'], ['--p2', '--p2-deep'], ['--orange', '--orange-deep'], ['--mic-on', '--mic-on-deep']];
+  $('#albumTitle').innerHTML = [...'MY CARDS'].map((ch, i) => ch === ' ' ? '<i class="gap"></i>'
+    : `<span style="--c:var(${TITLE_C[i % 4][0]});--cd:var(${TITLE_C[i % 4][1]})">${ch}</span>`).join('');
+  function openAlbum() {
+    S.sfx('tap');
+    const ART = window.EC_CARD_ART || {};
+    $('#albumGrid').innerHTML = Cards.words.map((w, i) => {
+      const n = album[w] || 0;
+      if (!n) return '<div class="acard empty"><span class="coin">?</span><span class="name">?</span></div>';
+      return `<button class="acard ${(i + Math.floor(i / 6)) % 2 ? 'pink' : 'sky'}" data-w="${w}" aria-label="${w}"><span class="coin"><img src="${ART[w] || Cards.byW[w].img}" alt="" draggable="false"></span>`
+        + `<b class="times">×${n}</b><span class="name"><b>${w[0]}</b>${w.slice(1)}</span></button>`;
+    }).join('');
+    $('#albumGrid').querySelectorAll('button.acard').forEach(b => b.addEventListener('click', () => {
+      b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump');
+      S.stopVoice(); S.chant(b.dataset.w);
+    }));
+    albumEl.classList.add('show');
+  }
+  function closeAlbum() { S.sfx('tap'); S.stopVoice(); albumEl.classList.remove('show'); }
+  $('#btnAlbum').addEventListener('click', openAlbum);
+  $('#btnAlbumClose').addEventListener('click', closeAlbum);
+
   // ── inputs ────────────────────────────────────────────────────────────────────────────────────────────
   buzzEl.forEach((b, i) => b.addEventListener('pointerdown', (e) => { e.preventDefault(); buzz(i); }));
   addEventListener('keydown', (e) => {
     if (e.repeat) return;
+    if (albumEl.classList.contains('show')) { if (e.code === 'Escape') closeAlbum(); return; }
     if (G.screen === 'title' && (e.code === 'Space' || e.code === 'Enter')) { startGame(); return; }
     if (['KeyA', 'KeyQ', 'ArrowLeft', 'ShiftLeft'].includes(e.code)) buzz(0);
     if (['KeyL', 'KeyP', 'ArrowRight', 'ShiftRight'].includes(e.code)) buzz(1);
@@ -660,6 +700,6 @@
   requestAnimationFrame(tick);
   if (Q.has('tap')) Mic.state = 'none';
   PhonicsAPI.init().then(showApi);
-  window.__ec = { G, buzz, startGame, showTitle, fake, mon, M3, wait, held, judgeSpeech, jump: () => jumpNow && jumpNow() };
+  window.__ec = { G, buzz, startGame, showTitle, fake, mon, M3, wait, held, judgeSpeech, jump: () => jumpNow && jumpNow(), album: () => album, openAlbum, closeAlbum };
   window.__ready = true;
 })();
