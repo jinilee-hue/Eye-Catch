@@ -399,7 +399,9 @@
           const f = await race(wait(700).then(() => fake.length ? fake.shift() : 'ok'));
           verdict = f === 'hold' ? await race(wait(30000).then(() => 'silence')) : f === 'nojudge' ? null : f;
         } else {
-          const r = await Mic.listen({ waitMs: quiet ? 11000 : 6000, onLevel: v => buzzEl[p].style.setProperty('--lv', v.toFixed(2)), aborted: () => !alive(tok) || jumped });
+          // more time to talk (user 2026-11-22: "발화시간을 너무 적게 줘서 그냥 기회가 빨리 넘어가는거 아냐?" → "ㅇㅇ"): 8 s to start
+          // (was 6), a 1.2 s pause ends the word (was 0.8 — a child's "mush… room" was cut), a word may run 5 s (was 3.5)
+          const r = await Mic.listen({ waitMs: quiet ? 11000 : 8000, maxMs: 5000, endMs: 1200, onLevel: v => buzzEl[p].style.setProperty('--lv', v.toFixed(2)), aborted: () => !alive(tok) || jumped });
           if (!alive(tok)) return 'wrong';
           if (jumped) return 'jump';
           if (r.kind === 'nomic') return tapTurn(p, tok);   // the microphone went away: tap mode from here
@@ -417,14 +419,14 @@
         if (jumped || verdict === 'jump') return 'jump';
         if (verdict === null) return 'nojudge';      // no judge could hear it: skip, no card (never pass on a sound)
         if (verdict === 'ok') { G.said++; return 'ok'; }
-        if (verdict === 'wrong') return 'wrong';
         if (verdict === 'silence') {
           if (++quiet >= 2) return 'silent';
           if (!G.jumpTold) { G.jumpTold = true; await race(jumpGuide(p)); if (!alive(tok)) return 'wrong'; if (jumped) return 'jump'; }
           mon.hop(1);
           await race(S.say('t:sayit'));
-        } else {                                     // unclear: speech, but not the word nor another picture
-          if (++misses >= 2) return 'goodtry';
+        } else {                                     // a miss: unclear, or another picture heard — both get one more try
+          // (user 2026-11-22: one mishearing used to end the turn at once; now the common 2-tries rule for both)
+          if (++misses >= 2) return verdict === 'wrong' ? 'wrong' : 'goodtry';
           await race(S.say('t:again'));
         }
         if (!alive(tok)) return 'wrong';
