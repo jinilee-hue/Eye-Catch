@@ -6,7 +6,7 @@
  * The say turn follows the phonics games' common rules (phonics-kit README "공통 규칙"): a JUMP button skips the word
  * (nobody gets the card), two unclear tries end it ("Good try!"), ~20 s of silence ends it, a word that can't be
  * judged skips it with no card. A finished game is saved to the shared record (js/phonics-progress.js, 'eye-catch').
- * Test hooks: window.__ec; URL ?fast=1 (no rule demo), ?tap=1 (tap mode), ?fake=1 (scripted verdicts:
+ * Test hooks: window.__ec; URL ?fast=1 (no rule demo), ?tap=1 (as if there were no microphone), ?fake=1 (scripted verdicts:
  * __ec.fake.push('ok'|'wrong'|'unclear'|'silence'|'nojudge'|'hold') — 'hold' = no verdict for 30 s, to press JUMP).
  */
 (function () {
@@ -290,11 +290,9 @@
         // too; if it heard the right word the answer stands, otherwise the player says it once more (user: "머그도 잘
         // 안되는데", "mitt도", "map도" — a misheard right word ended the turn at once)
         if (j.verdict === 'wrong') { const d = await dev; if (STT.last) STT.last.dev = d; return d === 'ok' ? 'ok' : d === 'wrong' ? 'wrong' : 'unclear'; }
-        const dt = j.d[target], dr = Math.min(...rv.filter(w => j.d[w] != null).map(w => j.d[w]), Infinity);
-        // the picture its phonemes are nearest to, among the pictures on the table (looser since the user's
-        // "너무 엄격한거 아냐??": any lead, up to 1.3 sounds off per sound). With the kit's near sounds and the 'wrong'
-        // rule above, 12 words x 8 voices: right words 89.6 % -> 90.6 %, other words passed 5.2 % -> 5.7 %
-        if (j.heard && dt != null && j.rel <= 1.3 && dr - dt > 0) return 'ok';
+        // no 'nearest picture' pass any more: it let any sound through that was a little closer to the answer than to the
+        // other pictures (up to 1.3 sounds off per sound) for +1 % right words (user 2026-11-22: "잘못말해도 카드가
+        // 획득되는데?"). Unclear to the server = the on-device recogniser must hear the word itself.
         const d = await dev;
         if (d === 'ok') { STT.last.dev = 'ok'; return 'ok'; }
         return 'unclear';
@@ -352,10 +350,11 @@
 
   /** 'ok' | 'wrong' (another picture) | 'goodtry' (two unclear tries) | 'silent' | 'jump' | 'nojudge' (couldn't be judged) */
   async function answerTurn(p, tok) {
-    // tap mode = this device can't hear words at all (no microphone / refused, file:// without a key, ?tap=1): the
-    // player who pressed taps the picture — a non-speaking mode, decided before anyone speaks
+    // the card is won only by SAYING the word (user 2026-11-22: "이 게임은 카드를 보고 이미지를 발견하면 말을 해야 카드를
+    // 획득할수 있는거잖아"). A device that can't hear words (no microphone / refused, file:// without a key, ?tap=1)
+    // no longer falls back to tapping the picture: the answer is shown and nobody takes the card (kit rule 5)
     const useMic = !Q.has('tap') && (Q.has('fake') || (Mic.state === 'on' && (STT.state !== 'error' || PhonicsAPI.usable())));
-    if (!useMic) return tapTurn(p, tok);
+    if (!useMic) return 'nojudge';
     try { return await micTurn(p, tok); } finally { S.setListening(false); }   // the music comes back however it ends
   }
   // The say turn, on the phonics games' common rules (phonics-kit README "공통 규칙: 설명 SKIP · 말하기 차례"; Phonics
@@ -404,7 +403,7 @@
           const r = await Mic.listen({ waitMs: quiet ? 11000 : 8000, maxMs: 5000, endMs: 1200, onLevel: v => buzzEl[p].style.setProperty('--lv', v.toFixed(2)), aborted: () => !alive(tok) || jumped });
           if (!alive(tok)) return 'wrong';
           if (jumped) return 'jump';
-          if (r.kind === 'nomic') return tapTurn(p, tok);   // the microphone went away: tap mode from here
+          if (r.kind === 'nomic') return 'nojudge';   // the microphone went away: no card without the word
           if (r.kind === 'silence') verdict = 'silence';
           else if (r.kind === 'speech') {
             setBuzz(p, 'listen', false); setBuzz(p, 'thinking', true);
@@ -434,26 +433,6 @@
       }
       return 'goodtry';
     } finally { if (my === jumpTurn) { jumpNow = null; showJump(p, false); } }   // a late end of a left game leaves a new turn alone
-  }
-
-  /** no microphone: tap the picture (picked on the 3D cards) */
-  function tapTurn(p, tok) {
-    return new Promise(res => {
-      setBuzz(p, 'listen', false);
-      S.say('t:tap');
-      let done = false;
-      const end = (v) => { if (done) return; done = true; removeEventListener('pointerdown', on, true); clearTimeout(to); res(v); };
-      const on = (e) => {
-        if (!alive(tok)) return end('wrong');
-        const hit = Card3D.pick(e.clientX, e.clientY);
-        if (!hit || !hit.word || (hit.card !== G.left && hit.card !== G.right)) return;
-        S.sfx('tap');
-        if (hit.word === answer()) end('ok');
-        else { hit.card.wrong(hit.word); end('wrong'); }
-      };
-      addEventListener('pointerdown', on, true);
-      const to = setTimeout(() => end('wrong'), 9000);
-    });
   }
 
   function hitCards(cards, w) {

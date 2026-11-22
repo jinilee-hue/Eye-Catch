@@ -61,10 +61,10 @@
     if (other) return 'wrong';
     // a hum ("Mmm…") is not a word: whisper scores it close to the short m-words (mop, mouse)
     if (/^\s*(h?m+|um+)[\s,.!?]*$/i.test(r.text || '')) return 'unclear';
-    // Phonics Match's rule (r.ok) lets a rival with ANOTHER first sound win by up to 2; here every picture starts
-    // with m, so the target itself must score best (tools/qa/stt_check.py: the mitt clip passed for mop at +1.2)
-    if (r.ok && r.rgap < -0.3) return 'ok';
-    if (r.pNo < 0.35 && r.sT > -6.5 && r.rgap < -1.5 && r.gap < 6) return 'ok';           // the target clearly beats every picture
+    // 'ok' ONLY when the word itself was heard (said() above). The score rules that passed the best-scoring picture are
+    // gone: every picture starts with m, so an "Mmm", a hum or a 'you' scored the target best and won the card (user
+    // 2026-11-22: "잘못말해도 카드가 획득되는데?", "말을 해야 카드를 획득할수 있는거잖아"; a 220 Hz hum heard as 'you' passed
+    // for moon). Scores still decide 'wrong' (another picture, clearly) below.
     const best = Object.entries(r.rv || {}).sort((a, b) => b[1] - a[1])[0];
     if (best && r.pNo < 0.35 && best[1] > r.sT + 2 && best[1] > -7.5) return 'wrong';     // another picture, clearly
     return 'unclear';
