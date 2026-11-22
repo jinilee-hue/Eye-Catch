@@ -307,7 +307,13 @@
     G.phase = 'race'; G.locked = [false, false];
     resetBuzzers();
     buzzEl.forEach(b => b.classList.add('ready'));
-    [0, 1].forEach(p => cue(p, !G.pressed[p]));
+    // the tap-the-button guide is always for BOTH players at once — in a race a guide on one side only tells that player
+    // to go (user 2026-11-22: "플레이어1만 자꾸 버튼 누르라고 가이드 주면 안될거 같은데"; it used to cue whoever hadn't pressed
+    // yet this game, so Player 1 was cued every round while only Player 2 pressed). Both at the first round of a game
+    // until someone presses, and both after 6 s with no press (armTimers). The 'chance' cue after a miss stays one-sided:
+    // that is the other player's turn by the rules.
+    const firstRound = !G.pressed[0] && !G.pressed[1];
+    [0, 1].forEach(p => cue(p, firstRound));
     mon.lookAt(null); mon.pose('up');
     armTimers(tok);
   }
