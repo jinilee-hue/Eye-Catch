@@ -65,12 +65,6 @@
   --skip-yel-deep: #dcbd62;
   --skip-yel-ink: #9a7420;
   --skip-icon: #5e3d12;      /* dark brown: a white icon vanished on the yellow (user: "검은색이나 갈색으로") */
-  --jump-hi: #a6ea6f;        /* the say turn's JUMP = Phonics Match's green jump button (phonics-kit README rule 2) */
-  --jump-lo: #4fbf43;
-  --jump-rim: #339132;
-  --jump-gloss: rgba(255, 255, 255, 0.45);
-  --jump-drop: rgba(60, 40, 50, 0.25);
-  --jump-ink-shadow: rgba(0, 0, 0, 0.15);
   --mic-shade: rgba(20, 30, 70, 0.28);
   --locked-filter: grayscale(1) brightness(1.06) contrast(.82);
   /* system buttons: the tutor's lilac, so they read apart from the orange START (user: "조금 다른 컬러로"); lighter, the
@@ -380,15 +374,14 @@ img { -webkit-user-drag: none; user-select: none; }
 .flyer { position: absolute; z-index: 30; pointer-events: none; }
 
 
-/* SKIP the explanation = a quiet white-glass pill with the word SKIP, in the top bar left of the sound button
-   (user 2026-11-22: "게임설명에 skip 버튼은 흰색바탕에 투명하게 넣어줘. 너무 잘보이지 않아도 되고" — and it must not look like the
-   say turn's green round JUMP: "모양이 같으면 안돼"). Same as the other games' SKIP: white see-through glass, white letters
-   with a soft purple-grey shadow, no arrow. It sits inside .sys but out of its flow (absolute), so the sound / exit
-   buttons never move; the bottom corners are the players' and the bottom centre is the tutor. Shown only while the
-   tutor explains (#btnSkip.show from game.js teach()). */
-.skip-btn { position: absolute; right: calc(100% + .17 * var(--hb)); top: 0; height: var(--hb); padding: 0 calc(.34 * var(--hb));
-  border-radius: 999px; display: flex; align-items: center; justify-content: center;
-  font: 800 calc(.4 * var(--hb))/1 'Baloo 2', var(--font); letter-spacing: .08em; color: var(--card-face);
+/* SKIP the explanation = a quiet white-glass pill with the word SKIP, centred just under the game logo
+   (user 2026-11-22: "게임설명에 skip 버튼은 흰색바탕에 투명하게 넣어줘. 너무 잘보이지 않아도 되고" → "로고 밑으로 옮겨줘"; it must not
+   look like the say turn's yellow round JUMP: "모양이 같으면 안돼"). The other games' SKIP look: white see-through glass, white
+   letters with a soft purple-grey shadow, no arrow. The logo is 520 × 401 at top 84 (bottom 485); the card pile below it
+   starts near 744, so the pill sits in that gap. Shown only while the tutor explains (#btnSkip.show, game.js teach()). */
+.skip-btn { position: absolute; left: 50%; translate: -50% 0; top: calc(512px - var(--ey)); height: 100px; padding: 0 46px;
+  border-radius: 999px; display: flex; align-items: center; justify-content: center; z-index: 3;
+  font: 800 46px/1 'Baloo 2', var(--font); letter-spacing: .08em; color: var(--card-face);
   text-shadow: 0 2px 5px var(--skip-ink-shadow);
   background: linear-gradient(180deg, var(--skip-glass-hi), var(--skip-glass-lo));
   -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3);
@@ -403,16 +396,19 @@ img { -webkit-user-drag: none; user-select: none; }
    Beside the tutor's mouth on the SPEAKING player's side (p2 = the rules' SKIP spot, p1 its mirror): in reach of the
    child who pressed, between the tutor and that pad, clear of both pads and both cards */
 .jump-btn { position: absolute; top: 1646px; width: 124px; height: 124px; border-radius: 50%; display: grid; place-items: center; z-index: 2;
-  background: linear-gradient(180deg, var(--jump-hi), var(--jump-lo));
-  box-shadow: inset 0 -10px 0 var(--jump-rim), inset 0 8px 8px var(--jump-gloss), 0 12px 18px var(--jump-drop);
+  /* the tutor's horn yellow with a dark-brown icon — this game's own jump button colour, as the user set it (11-20:
+     "skip 버튼 컬러 캐릭터 뿔처럼 노란색으로", "검은색이나 갈색으로"; 2026-11-22: "발화점프 버튼 내가 노란색으로 수정했던거 왜 초록으로
+     바뀌었어?") — not Phonics Match's green */
+  background: radial-gradient(70% 45% at 46% 20%, var(--skip-yel-hi) 0 38%, transparent 70%), radial-gradient(circle at 50% 38%, var(--skip-yel) 0 48%, var(--skip-yel-deep) 100%);
+  box-shadow: 0 12px 20px var(--shade), inset 0 -12px 14px var(--skip-yel-deep);
   opacity: 0; scale: .4; pointer-events: none; transition: opacity .2s, scale .3s cubic-bezier(.2, 1.6, .4, 1), transform .12s ease; }
 .jump-btn.p1 { left: 818px; }
 .jump-btn.p2 { left: 1458px; }
 .jump-btn.show { opacity: 1; scale: 1; pointer-events: auto; animation: jump-in .62s cubic-bezier(.3, .7, .4, 1) both; }
 .jump-btn.show.poke { animation: jump-in .62s cubic-bezier(.3, .7, .4, 1) both, jump-hop .52s ease-out; }
 .jump-btn:active { transform: scale(.92); }
-.jump-btn svg { width: 62%; height: 62%; fill: none; stroke: var(--card-face); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 3px 0 var(--jump-ink-shadow)); }
-.jump-btn svg circle { fill: var(--card-face); stroke: none; }
+.jump-btn svg { width: 64%; height: 64%; fill: none; stroke: var(--skip-icon); stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 2px 0 var(--skip-yel-hi)); }
+.jump-btn svg circle { fill: var(--skip-icon); stroke: none; }
 @keyframes jump-in { 0% { opacity: 0; translate: 0 60px; scale: .5; } 18% { opacity: 1; translate: 0 26px; scale: 1.08 .9; }
   50% { translate: 0 -40px; scale: .94 1.07; } 78% { translate: 0 0; scale: 1.1 .9; } 100% { opacity: 1; translate: 0 0; scale: 1; } }
 @keyframes jump-hop { 0% { translate: 0 0; scale: 1; } 18% { translate: 0 5px; scale: 1.1 .9; } 50% { translate: 0 -36px; scale: .94 1.07; }
