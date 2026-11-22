@@ -52,6 +52,8 @@
   --wc-edge: #d5d9e2;
   --wc-line: rgba(30, 40, 70, 0.08);
   --skip-bg: rgba(255, 255, 255, 0.42);
+  --skip-glass-hi: rgba(255, 255, 255, 0.58);   /* the quiet white-glass SKIP pill (top to bottom) */
+  --skip-glass-lo: rgba(255, 255, 255, 0.3);
   --skip-shade: rgba(60, 40, 80, 0.18);
   --skip-ink-shadow: rgba(90, 70, 120, 0.45);
   --word-ink: #1f1d24;
@@ -378,21 +380,23 @@ img { -webkit-user-drag: none; user-select: none; }
 .flyer { position: absolute; z-index: 30; pointer-events: none; }
 
 
-/* SKIP the explanation = a yellow pill with the word SKIP beside the tutor's mouth (user: "입 옆에" → "우측으로 옮겨줘").
-   It must not look like the say turn's green JUMP (user 2026-11-22: "게임설명에 skip 버튼과 발화를 skip 하는거 두개가 있어야해",
-   "모양이 같으면 안돼"). It used to be a round ball with the same jumping-child icon, so the two read as one button.
-   The tutor's horn yellow and dark-brown ink are kept (users: "skip 버튼 컬러 캐릭터 뿔처럼 노란색으로", "검은색이나 갈색으로").
-   It hops in and bobs while the tutor explains. */
-.skip-btn { position: absolute; left: 1452px; top: 1664px; height: 104px; padding: 0 46px; border-radius: 999px;
-  display: flex; align-items: center; justify-content: center;
-  font: 800 60px/1 'Baloo 2', var(--font); letter-spacing: .06em; color: var(--skip-icon); text-shadow: 0 2px 0 var(--skip-yel-hi);
-  background: linear-gradient(180deg, var(--skip-yel-hi), var(--skip-yel) 52%, var(--skip-yel-deep));
-  box-shadow: inset 0 -9px 0 var(--skip-yel-deep), inset 0 6px 6px var(--skip-yel-hi), 0 12px 20px var(--shade);
-  opacity: 0; transform: scale(.3); pointer-events: none; transition: opacity .25s, transform .35s cubic-bezier(.2, 1.6, .4, 1); }
-.skip-btn span { translate: 0 3px; }
-.skip-btn.show { opacity: 1; transform: none; pointer-events: auto; animation: jumpBob 1.6s ease-in-out .4s infinite; }
-@keyframes jumpBob { 0%, 70%, 100% { translate: 0 0; } 80% { translate: 0 -18px; } 90% { translate: 0 0; } }
-.skip-btn:active { transform: scale(.92); }
+/* SKIP the explanation = a quiet white-glass pill with the word SKIP, in the top bar left of the sound button
+   (user 2026-11-22: "게임설명에 skip 버튼은 흰색바탕에 투명하게 넣어줘. 너무 잘보이지 않아도 되고" — and it must not look like the
+   say turn's green round JUMP: "모양이 같으면 안돼"). Same as the other games' SKIP: white see-through glass, white letters
+   with a soft purple-grey shadow, no arrow. It sits inside .sys but out of its flow (absolute), so the sound / exit
+   buttons never move; the bottom corners are the players' and the bottom centre is the tutor. Shown only while the
+   tutor explains (#btnSkip.show from game.js teach()). */
+.skip-btn { position: absolute; right: calc(100% + .17 * var(--hb)); top: 0; height: var(--hb); padding: 0 calc(.34 * var(--hb));
+  border-radius: 999px; display: flex; align-items: center; justify-content: center;
+  font: 800 calc(.4 * var(--hb))/1 'Baloo 2', var(--font); letter-spacing: .08em; color: var(--card-face);
+  text-shadow: 0 2px 5px var(--skip-ink-shadow);
+  background: linear-gradient(180deg, var(--skip-glass-hi), var(--skip-glass-lo));
+  -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3);
+  box-shadow: 0 8px 16px var(--skip-shade);
+  opacity: 0; pointer-events: none; transition: opacity .3s; }
+.skip-btn span { translate: 0 2px; }
+.skip-btn.show { opacity: 1; pointer-events: auto; }
+.skip-btn:active { transform: scale(.94); }
 
 /* JUMP in the say turn (phonics-kit README "공통 규칙" 2): Phonics Match's button as is — green, the white jumping child,
    jumps in when the turn starts, hops when the guide's glove taps it. Jump = skip this word: nobody gets the card.

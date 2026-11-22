@@ -6,7 +6,7 @@
 <title>Eye Catch</title>
 <link rel="stylesheet" href="css/font.css?v=54832f73">
 <link rel="stylesheet" href="css/font-ko.css?v=fa5b8de1">
-<link rel="stylesheet" href="css/style.css?v=3ab959d5">
+<link rel="stylesheet" href="css/style.css?v=63756708">
 </head>
 <body>
 <div id="backdrop" aria-hidden="true"></div>
@@ -32,7 +32,6 @@
     <button class="game-el buzzer p2" id="buzz2" aria-label="Player 2 button" data-p="1"><span class="dome"><img src="assets/img/avatar2.webp?v=444c9ece" alt=""></span><i class="ring"></i><i class="cue" aria-hidden="true"><i class="ripple"></i><img class="hand" alt=""></i><i class="mic"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg></i></button>
 
     <div class="game-el wordpop" id="wordPop" aria-live="polite"></div>
-    <button class="game-el skip-btn" id="btnSkip" aria-label="Skip"><span>SKIP</span></button>
     <button class="game-el jump-btn" id="btnJump" aria-label="Jump"><svg viewBox="0 0 24 24"><g transform="translate(12 12.2) scale(1.12) translate(-12 -12)"><circle cx="15.4" cy="4.1" r="2.45"/><path d="M14.1 7.1 11.2 12"/><path d="M13.6 8.3 18.3 6.2"/><path d="M13.6 8.3 9.3 6.5"/><path d="M11.2 12 14.8 13.5 13 16.5"/><path d="M11.2 12 8 14.3 5 12.9"/><path d="M7.8 20.9h9.8"/></g></svg></button>
     <img class="game-el jump-hand" id="jumpHand" alt="" aria-hidden="true">
     <div class="fx" id="fx" aria-hidden="true"></div>
@@ -41,6 +40,7 @@
       <button class="sys-btn key" id="btnKey" aria-label="발음 인식 서버 키" data-api="unknown"><svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="3.6"/><path d="M11.6 12H20.5M17.6 12v3.2M20.5 12v2.4"/></svg><i class="dot"></i></button>
     </div>
     <div class="sys">
+      <button class="game-el skip-btn" id="btnSkip" aria-label="Skip"><span>SKIP</span></button>
       <button class="sys-btn lang" id="btnLang" aria-label="Language: English or Korean"><span class="knob"></span>
         <span class="flag on" data-l="en"><svg viewBox="0 0 24 24" aria-hidden="true"><defs><clipPath id="flag-en"><circle cx="12" cy="12" r="12"/></clipPath></defs><g clip-path="url(#flag-en)"><rect width="24" height="24" fill="#fff"/><rect y="0" width="24" height="1.85" fill="#b22234"/><rect y="3.69" width="24" height="1.85" fill="#b22234"/><rect y="7.38" width="24" height="1.85" fill="#b22234"/><rect y="11.08" width="24" height="1.85" fill="#b22234"/><rect y="14.77" width="24" height="1.85" fill="#b22234"/><rect y="18.46" width="24" height="1.85" fill="#b22234"/><rect y="22.15" width="24" height="1.85" fill="#b22234"/><rect width="12" height="12.92" fill="#3c3b6e"/><g fill="#fff"><circle cx="1.6" cy="1.8" r=".7"/><circle cx="4.5" cy="1.8" r=".7"/><circle cx="7.4" cy="1.8" r=".7"/><circle cx="10.3" cy="1.8" r=".7"/><circle cx="3.05" cy="3.7" r=".7"/><circle cx="5.95" cy="3.7" r=".7"/><circle cx="8.85" cy="3.7" r=".7"/><circle cx="1.6" cy="5.6" r=".7"/><circle cx="4.5" cy="5.6" r=".7"/><circle cx="7.4" cy="5.6" r=".7"/><circle cx="10.3" cy="5.6" r=".7"/><circle cx="3.05" cy="7.5" r=".7"/><circle cx="5.95" cy="7.5" r=".7"/><circle cx="8.85" cy="7.5" r=".7"/><circle cx="1.6" cy="9.4" r=".7"/><circle cx="4.5" cy="9.4" r=".7"/><circle cx="7.4" cy="9.4" r=".7"/><circle cx="10.3" cy="9.4" r=".7"/><circle cx="3.05" cy="11.3" r=".7"/><circle cx="5.95" cy="11.3" r=".7"/><circle cx="8.85" cy="11.3" r=".7"/></g></g></svg></span>
         <span class="flag" data-l="ko"><svg viewBox="-12 -12 24 24" aria-hidden="true"><defs><clipPath id="flag-ko"><circle r="12"/></clipPath></defs><g clip-path="url(#flag-ko)"><rect x="-18" y="-12" width="36" height="24" fill="#fff"/><g transform="rotate(33.69)"><path d="M-6 0a6 6 0 0 1 12 0 3 3 0 0 0-6 0 3 3 0 0 1-6 0z" fill="#cd2e3a"/><path d="M-6 0a6 6 0 0 0 12 0 3 3 0 0 0-6 0 3 3 0 0 1-6 0z" fill="#0047a0"/></g><g fill="#151515"><g transform="rotate(33.69) translate(-10.2 0)"><rect x="-1.55" y="-2.8" width=".9" height="5.6"/><rect x="-.15" y="-2.8" width=".9" height="5.6"/><rect x="1.25" y="-2.8" width=".9" height="5.6"/></g><g transform="rotate(33.69) translate(10.2 0)"><rect x="-2.2" y="-2.8" width=".9" height="2.5"/><rect x="-2.2" y=".3" width=".9" height="2.5"/><rect x="-.75" y="-2.8" width=".9" height="2.5"/><rect x="-.75" y=".3" width=".9" height="2.5"/><rect x=".7" y="-2.8" width=".9" height="2.5"/><rect x=".7" y=".3" width=".9" height="2.5"/></g><g transform="rotate(-33.69) translate(10.2 0)"><rect x="-2.2" y="-2.8" width=".9" height="2.5"/><rect x="-2.2" y=".3" width=".9" height="2.5"/><rect x="-.75" y="-2.8" width=".9" height="5.6"/><rect x=".7" y="-2.8" width=".9" height="2.5"/><rect x=".7" y=".3" width=".9" height="2.5"/></g><g transform="rotate(-33.69) translate(-10.2 0)"><rect x="-1.55" y="-2.8" width=".9" height="5.6"/><rect x="-.15" y="-2.8" width=".9" height="2.5"/><rect x="-.15" y=".3" width=".9" height="2.5"/><rect x="1.25" y="-2.8" width=".9" height="5.6"/></g></g></g></svg></span>
