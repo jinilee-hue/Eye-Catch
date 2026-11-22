@@ -186,6 +186,8 @@ img { -webkit-user-drag: none; user-select: none; }
 .plate .score { font-size: 100px; padding-top: 10px; min-width: 60px; display: inline-block; }
 .plate .score.bump { animation: scoreBump .7s cubic-bezier(.2, 1.8, .4, 1); }
 @keyframes scoreBump { 0% { transform: scale(1); } 35% { transform: scale(1.6) rotate(-6deg); } 100% { transform: scale(1); } }
+.plate .score.drop { animation: scoreDrop .6s ease-out; }   /* a card given back (game.js loseCard) */
+@keyframes scoreDrop { 0%, 100% { transform: none; } 20% { transform: translateY(14px) scale(.8); } 40% { transform: translateX(-12px); } 60% { transform: translateX(10px); } 80% { transform: translateX(-5px); } }
 /* a won card, small: the card back's sunburst + cream middle */
 /* the won-card icon = the real card back (user: "실제 카드 뒷면컬러로"): sunburst in the deck's colours with the deep
    centre — Player 1 the sky back, Player 2 the pink back */
@@ -368,6 +370,11 @@ img { -webkit-user-drag: none; user-select: none; }
 @keyframes burst { 0% { box-shadow: 0 0 0 0 var(--c); opacity: 1; } 100% { box-shadow: 0 0 0 var(--r) var(--c); opacity: 0; } }
 .firework { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--c); animation: fw var(--t, 1.2s) cubic-bezier(.15, .7, .3, 1) both; }
 @keyframes fw { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 80% { opacity: 1; } 100% { transform: translate(var(--dx), calc(var(--dy) + 60px)) scale(.4); opacity: 0; } }
+/* "−1" over a player's count when a wrong word gives a card back (FX.minus): a cream pill in the player's colour */
+.minus { position: absolute; padding: 4px 34px 0; border-radius: 70px; background: var(--cream); color: var(--c); font: 800 96px/1.15 var(--font);
+  box-shadow: 0 8px 0 var(--shade), 0 14px 22px var(--cream-shadow); white-space: nowrap; animation: minusUp 1.6s cubic-bezier(.2, 1.4, .4, 1) both; }
+@keyframes minusUp { 0% { transform: translate(-50%, -30%) scale(.3); opacity: 0; } 18% { transform: translate(-50%, -100%) scale(1.15); opacity: 1; }
+  70% { transform: translate(-50%, -125%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -190%) scale(.9); opacity: 0; } }
 .tap-guard { display: none; }
 
 /* a picture flying to a plate / the bubble on the tutor */

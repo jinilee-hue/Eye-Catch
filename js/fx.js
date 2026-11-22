@@ -68,6 +68,12 @@
     e.style.cssText = `left:${x}px;top:${y}px;--r:${r}px`;
     add(e, 1500);
   };
+  /** a card given back: "−1" pops up at (x, y) and floats away; c = the player's colour */
+  FX.minus = function (x, y, c) {
+    const e = document.createElement('b'); e.className = 'minus'; e.textContent = '−1';
+    e.style.cssText = `left:${x}px;top:${y}px;--c:${c}`;
+    add(e, 1700);
+  };
   /** centre of an element in stage px */
   FX.center = function (el) {
     const st = document.getElementById('stage').getBoundingClientRect(), r = el.getBoundingClientRect();

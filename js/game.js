@@ -2,6 +2,7 @@
  * Two cards on the table share exactly one picture. Spot it, hit YOUR button and say the word: the tutor's
  * recogniser (on-device whisper, js/stt.js) checks it. Right -> you take the left card, the right card slides over
  * and a new one comes from the deck. Wrong -> the other player gets the chance. 10 cards; most cards wins.
+ * Saying another picture's word costs one won card: it goes back onto the deck (one more round), "−1" at the count.
  * Without a microphone / recogniser (file://, mic refused) the player who pressed taps the picture instead.
  * The say turn follows the phonics games' common rules (phonics-kit README "공통 규칙"): a JUMP button skips the word
  * (nobody gets the card), two unclear tries end it ("Good try!"), ~20 s of silence ends it, a word that can't be
@@ -16,6 +17,7 @@
   const S = Sound, M3 = window.EC3D;
   const stage = $('#stage');
   const ROUNDS = 10;
+  const SPARE = 10;                                // cards a lost card can add to the deck (one more round each), at most
   const G = { tok: 0, screen: 'title', phase: 'idle', scores: [0, 0], locked: [false, false], r: 0, deck: null, left: null, right: null, taught: false, helloed: false, timers: [] };
   const fake = [];
   const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -190,12 +192,13 @@
     const tok = ++G.tok;
     G.screen = 'game'; G.phase = 'intro'; G.scores = [0, 0]; G.r = 0; G.locked = [false, false]; G.pressed = [false, false];
     G.said = 0; G.jumps = 0; G.jumpTold = false; G.t0 = 0;   // for the record (finish) and the JUMP guide (once a game)
+    G.lost = [0, 0]; G.rounds = ROUNDS;              // cards each player gave back for a wrong word; rounds (+1 per card back)
     clearTimers(); S.stopVoice();
     stage.dataset.screen = 'game';
     $('#result').classList.remove('show'); if (window.Crown3D) Crown3D.hide();
     clearTitleCards(); disposeGameCards(); Tin3D.show(false); Card3D.ambient(true, ...DECK);
     resetBuzzers(); renderScores(); hideWord(); dropJump();
-    G.deck = Cards.makeDeck(ROUNDS + 1, Q.get('answer'));
+    G.deck = Cards.makeDeck(ROUNDS + 1 + SPARE, Q.get('answer'));   // the chain goes on for the cards that come back
     setDeckN(ROUNDS + 1);
     mon.setShadow(false); mon.lookAt(null); mon.rest = 'up'; mon.pose('up'); mon.setGrip(false);
     placeMonster('game', 700);
@@ -479,7 +482,7 @@
     await flyToPlate(G.left, p);
     if (!alive(tok)) return;
     G.scores[p]++; renderScores();
-    const se = scoreEl[p]; se.classList.remove('bump'); void se.offsetWidth; se.classList.add('bump');
+    const se = scoreEl[p]; se.classList.remove('bump', 'drop'); void se.offsetWidth; se.classList.add('bump');
     const pc = FX.center(plateEl[p]); FX.sparkles(pc.x, pc.y + 20, 12, 220);
     S.sfx('card');
     hideWord();
@@ -489,7 +492,7 @@
   async function miss(p, tok, why = 'wrong') {
     G.locked[p] = true;
     buzzEl[p].classList.add('locked');
-    if (why === 'wrong') { S.sfx('wrong'); mon.oops(); await S.say('t:oops'); }
+    if (why === 'wrong') { S.sfx('wrong'); mon.oops(); await Promise.all([S.say('t:oops'), loseCard(p, tok)]); }
     else if (why === 'goodtry') { mon.hop(1); await S.say('t:goodtry'); }
     if (!alive(tok)) return;
     const o = 1 - p;
@@ -501,6 +504,23 @@
       if (!alive(tok)) return;
       if (G.phase === 'race') { mon.pose('up'); armTimers(tok); }
     } else await nobody(tok);
+  }
+  /** a wrong word (another picture) costs one won card (user 2026-11-22: "게임을 하기위해서 점수나 횟수 차감은 있어야하는데"):
+   *  the top card of the player's pile goes back onto the deck — one more round to play — the count drops with a "−1".
+   *  An empty pile loses nothing; the turn goes on as before */
+  async function loseCard(p, tok) {
+    const card = G.piles[p].pop();
+    if (!card) return;
+    G.scores[p]--; G.lost[p]++; renderScores();
+    const se = scoreEl[p]; se.classList.remove('bump', 'drop'); void se.offsetWidth; se.classList.add('drop');
+    const c = FX.center(se); FX.minus(c.x, c.y - 40, p ? 'var(--p2-deep)' : 'var(--p1-deep)');
+    S.sfx('whoosh');
+    await card.toDeck(DECK[0], DECK[1], 320, -2.95, 900, p ? -1 : 1);
+    card.dispose();
+    if (!alive(tok)) return;
+    if (G.rounds < ROUNDS + SPARE) G.rounds++;
+    setDeckN(G.rounds - 1 - G.r);
+    S.sfx('card');
   }
   /** nobody got it: show it, read it, the left card leaves the table */
   async function nobody(tok) {
@@ -556,16 +576,16 @@
 
   async function next(tok) {
     G.r++;
-    if (G.r >= ROUNDS) return finish(tok);
+    if (G.r >= G.rounds) return finish(tok);
     // the right card slides left, a new card comes from the deck
     G.left = G.right; G.right = null;
     G.left.slideTo(...SLOT.L); G.left.yawTo(YAW.L, 750); G.left.restyle('sky'); S.sfx('whoosh');
     await wait(450);
     G.right = putCard('R', G.deck.cards[G.r + 1], 'right', 'flip');
-    setDeckN(ROUNDS - 1 - G.r);
+    setDeckN(G.rounds - 1 - G.r);
     await wait(750);
     if (!alive(tok)) return;
-    if (G.r === ROUNDS - 1) { await S.say('t:last'); if (!alive(tok)) return; }
+    if (G.r === G.rounds - 1) { await S.say('t:last'); if (!alive(tok)) return; }
     round(tok);
   }
 
@@ -587,10 +607,10 @@
     S.sfx('win'); FX.confetti(110); FX.fireworks(7, 3600);
     mon.cheer(); mon.lookAt(win < 0 ? null : win ? 2150 : 250, 300);
     // the shared record of the phonics games (phonics-kit F1, records only — no level select): cards per player,
-    // winner (1 / 2, 0 = a tie), words said right, words jumped, play time from the first deal
+    // winner (1 / 2, 0 = a tie), words said right, words jumped, cards given back for a wrong word, play time from the first deal
     try {
-      if (window.PhonicsProgress) PhonicsProgress.played('eye-catch', { p1: a, p2: b, cards: a + b, winner: win + 1, rounds: ROUNDS,
-        words: G.said, jumps: G.jumps, time: G.t0 ? Math.round((performance.now() - G.t0) / 100) / 10 : null });
+      if (window.PhonicsProgress) PhonicsProgress.played('eye-catch', { p1: a, p2: b, cards: a + b, winner: win + 1, rounds: G.rounds,
+        words: G.said, jumps: G.jumps, lost: G.lost[0] + G.lost[1], time: G.t0 ? Math.round((performance.now() - G.t0) / 100) / 10 : null });
     } catch (e) { console.warn('progress', e); }
     await wait(600); if (!alive(tok)) return;
     await S.say(win < 0 ? 't:draw' : win ? 't:win2' : 't:win1'); if (!alive(tok)) return;

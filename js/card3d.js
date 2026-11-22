@@ -315,6 +315,20 @@
         mover.rotation.set(-LIE * u, dir * 2 * PI * u, rz * u);        // a flip on the way, then flat on the table
       }, t => t * t * (3 - 2 * t));
     };
+    /** a pile card goes back onto the deck (a wrong word costs a card): it lifts off the pile toward the camera (over the
+     *  play cards), turns face down and lands on the deck's top coin, deck-sized. sx, sy = stage px of the deck */
+    card.toDeck = (sx, sy, px, z = -2.95, ms = 900, dir = 1) => {
+      const { p, k } = S.placeAt(sx, sy, z);
+      const d0 = mover.position.clone(), d1 = p.sub(root.position).divideScalar(root.scale.x);
+      const s0 = mover.scale.x, s1 = px / 200 * k / root.scale.x, r0 = mover.rotation.clone(), c0 = coin.scale.z;
+      const lift = 2.6 / root.scale.x;
+      return card.tween(ms, (u) => {
+        mover.position.lerpVectors(d0, d1, u); mover.position.z += sin(u * PI) * lift;
+        mover.scale.setScalar(s0 + (s1 - s0) * u);
+        coin.scale.z = c0 + (1 - c0) * u;
+        mover.rotation.set(r0.x + (0.1 - r0.x) * u, r0.y + dir * 3 * PI * u, r0.z * (1 - u));   // odd half-turns: face down
+      }, t => t * t * (3 - 2 * t));
+    };
     /** a sky / gold rim for the slot it now sits in (the right card slides over to the left) */
     card.restyle = (style, ms = 700) => {
       const to = new THREE.Color(css(STYLE[style].rim)), from = rimMat.color.clone();
