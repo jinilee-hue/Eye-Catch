@@ -124,7 +124,7 @@
   --white-a60: rgba(255, 255, 255, 0.6);
   --white-a30: rgba(255, 255, 255, 0.3);
   --dim: rgba(40, 24, 18, 0.38);
-  --slot-bg: #f4f5f9;          /* MY CARDS: a card not won yet ('?' slot), and an unearned result star */
+  --slot-bg: #f4f5f9;          /* CHARACTERS: a locked face's frame, the player tab not chosen; --slot-line: an unearned result star */
   --slot-line: #ccd1dd;
   --slot-ink: #b3b9c8;
 }
@@ -373,39 +373,77 @@ img { -webkit-user-drag: none; user-select: none; }
 .pill.home { background: linear-gradient(180deg, var(--p1), var(--p1-deep)); }
 .pill:active { transform: scale(.95); }
 
-/* ── MY CARDS (title): every card won on this device (game.js openAlbum). The result card's white panel; the title in
-   the logo's candy colours; the 18 words as round cards like the 3D ones (a glossy sky / pink rim by turns, the white
-   face with the picture, the word under it, its first sound pink) with "×N" won; a dashed '?' slot for the rest ── */
-#stage[data-screen="game"] #btnAlbum { display: none; }   /* title only */
-.album { z-index: 6; position: absolute; inset: calc(-1 * var(--ey)) calc(-1 * var(--ex)); display: none; place-items: center; background: var(--dim); pointer-events: auto; }
-.album.show { display: grid; animation: fadeIn .3s both; }
-.album-card { position: relative; width: 1960px; padding: 70px 90px 140px; border-radius: 120px; background: var(--card-face); box-shadow: 0 40px 60px var(--shade);
+/* ── CHARACTERS (title): the cards won buy player faces (game.js renderChars). The result card's white panel; the title in
+   the logo's candy colours; the wallet (a card back + the cards to spend) top right; the two player tabs in the players'
+   colours; the six faces in round frames — lilac when free, the player's colour with a "1" / "2" badge when in use, grey
+   with a lock and a price chip when locked (the chip lights on the first tap, the second tap buys) ── */
+#stage[data-screen="game"] #btnChars { display: none; }   /* title only */
+.chars { z-index: 6; position: absolute; inset: calc(-1 * var(--ey)) calc(-1 * var(--ex)); display: none; place-items: center; background: var(--dim); pointer-events: auto; }
+.chars.show { display: grid; animation: fadeIn .3s both; }
+#stage:has(.chars.show) .fx { z-index: 7; }   /* the unlock sparkles over the panel */
+.chars-card { position: relative; width: 1960px; padding: 70px 90px 150px; border-radius: 120px; background: var(--card-face); box-shadow: 0 40px 60px var(--shade);
   animation: popCard .6s cubic-bezier(.2, 1.5, .4, 1) both; }
-.album-title { display: flex; justify-content: center; gap: 4px; margin-bottom: 64px; font-size: 140px; font-weight: 800; line-height: 1; padding-top: 14px; }
-.album-title span { color: var(--c); text-shadow: 0 9px 0 var(--cd), 0 16px 18px var(--shade); }
-.album-title .gap { width: 48px; }
-.album-grid { display: grid; grid-template-columns: repeat(6, 240px); gap: 48px 60px; justify-content: center; }
-.acard { position: relative; display: flex; flex-direction: column; align-items: center; gap: 18px; }
-.acard.sky { --rc: var(--rim-sky); --rc-hi: var(--rim-sky-hi); --rc-deep: var(--rim-sky-deep); }
-.acard.pink { --rc: var(--rim-pink); --rc-hi: var(--rim-pink-hi); --rc-deep: var(--rim-pink-deep); }
-.acard .coin { position: relative; width: 240px; height: 240px; border-radius: 50%; display: grid; place-items: center;
-  background: linear-gradient(180deg, var(--rc-hi), var(--rc) 38%, var(--rc-deep)); box-shadow: 0 10px 0 var(--rc-deep), 0 18px 22px var(--shade); }
-/* the white face inside the rim, the picture kept inside it (a tall one — milk, mirror, mop — too) */
-.acard .coin img { position: absolute; left: 16px; top: 16px; width: 208px; height: 208px; padding: 34px; border-radius: 50%; object-fit: contain; display: block;
+.chars-title { display: flex; justify-content: center; gap: 4px; margin-bottom: 56px; font-size: 130px; font-weight: 800; line-height: 1; padding-top: 14px; }
+.chars-title span { color: var(--c); text-shadow: 0 9px 0 var(--cd), 0 16px 18px var(--shade); }
+/* the wallet: the result's count capsule in orange, clear of the close button on the corner */
+.wallet { position: absolute; top: 78px; right: 180px; height: 124px; padding: 0 40px 0 22px; border-radius: 62px; display: flex; align-items: center; gap: 16px;
+  color: var(--card-face); font-weight: 800; background: linear-gradient(180deg, var(--orange), var(--orange-deep)); text-shadow: 0 5px 0 var(--shade);
+  box-shadow: 0 14px 20px var(--shade), inset 0 -11px 0 var(--shade), inset 0 9px 0 var(--white-a30); }
+.wallet b { font-size: 84px; line-height: 1; padding-top: 10px; min-width: 50px; text-align: center; }
+.wallet .mini-card, .ch .price .mini-card { --mc: var(--rim-sky); --mc-hi: var(--rim-sky-hi); --mc-deep: var(--rim-sky-deep); }
+/* the player choosing: Player 1 blue / Player 2 pink, the chosen tab filled, each with its face */
+.chars-tabs { display: flex; justify-content: center; gap: 44px; margin-bottom: 80px; }
+.ptab { display: flex; align-items: center; gap: 22px; height: 140px; padding: 0 60px 0 16px; border-radius: 70px; font-size: 64px; font-weight: 800; line-height: 1;
+  background: var(--slot-bg); box-shadow: inset 0 -9px 0 var(--slot-line); transition: transform .15s; }
+.ptab > span:last-child { padding-top: 10px; }
+.ptab.p1 { color: var(--p1-deep); --c: var(--p1); --cd: var(--p1-deep); --ci: var(--p1-ink); }
+.ptab.p2 { color: var(--p2-deep); --c: var(--p2); --cd: var(--p2-deep); --ci: var(--p2-ink); }
+.ptab .face { width: 108px; height: 108px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(180deg, var(--c), var(--cd)); }
+.ptab .face img { width: 80%; height: 80%; object-fit: contain; }
+.ptab.on { color: var(--card-face); background: linear-gradient(180deg, var(--c), var(--cd)); text-shadow: 0 5px 0 var(--ci); transform: scale(1.06);
+  box-shadow: 0 14px 20px var(--shade), inset 0 -11px 0 var(--shade), inset 0 9px 0 var(--white-a30); }
+.ptab.on .face { background: var(--card-face); box-shadow: inset 0 4px 8px var(--wc-line); }
+/* the faces: a glossy ring round a white face (like the 3D cards' rims) */
+.chars-grid { display: grid; grid-template-columns: repeat(6, 260px); gap: 44px; justify-content: center; }
+.ch { position: relative; width: 260px; height: 260px; border-radius: 50%; --rc: var(--btn-mid); --rc-hi: var(--btn-top); --rc-deep: var(--btn-bot);
+  background: linear-gradient(180deg, var(--rc-hi), var(--rc) 38%, var(--rc-deep)); box-shadow: 0 10px 0 var(--rc-deep), 0 18px 22px var(--shade); transition: transform .15s; }
+.ch img { position: absolute; left: 16px; top: 16px; width: 228px; height: 228px; padding: 16px; border-radius: 50%; object-fit: contain; display: block;
   background: var(--card-face); box-shadow: inset 0 6px 10px var(--wc-line); }
-.acard .name { font-size: 56px; font-weight: 700; line-height: 1; color: var(--word-ink); white-space: nowrap; }
-.acard .name b { color: var(--pink); font-weight: 800; }
-.acard .times { position: absolute; top: -6px; right: -16px; min-width: 96px; height: 66px; padding: 8px 18px 0; border-radius: 33px; font-size: 46px; line-height: 58px; font-weight: 800;
-  color: var(--card-face); background: linear-gradient(180deg, var(--orange), var(--orange-deep)); text-shadow: 0 3px 0 var(--shade);
-  box-shadow: 0 6px 10px var(--shade), inset 0 -6px 0 var(--shade), inset 0 5px 0 var(--white-a30); }
-.acard:active .coin { transform: scale(.94); }
-.acard.bump .coin { animation: acardBump .5s cubic-bezier(.2, 1.8, .4, 1); }
-@keyframes acardBump { 40% { transform: scale(1.12) rotate(-4deg); } 70% { transform: scale(.97); } }
-.acard.empty .coin { padding: 14px 0 0; border: 8px dashed var(--slot-line); background: var(--slot-bg); box-shadow: none; font-size: 110px; font-weight: 800; color: var(--slot-ink); }
-.acard.empty .name { color: var(--slot-ink); }
+.ch:active { scale: .95; }
+.ch[data-who="1"] { --rc: var(--p1); --rc-hi: var(--rim-sky-hi); --rc-deep: var(--p1-deep); }
+.ch[data-who="2"] { --rc: var(--p2); --rc-hi: var(--rim-pink-hi); --rc-deep: var(--p2-deep); }
+.ch.mine, .ch.ask { transform: translateY(-14px); }   /* the tab player's face, the locked face asked about */
+.ch[data-who="1"].mine { box-shadow: 0 10px 0 var(--rc-deep), 0 0 50px 14px var(--p1-glow); }
+.ch[data-who="2"].mine { box-shadow: 0 10px 0 var(--rc-deep), 0 0 50px 14px var(--p2-glow); }
+.ch .who, .ch .lock { position: absolute; right: -10px; top: -10px; width: 92px; height: 92px; border-radius: 50%; display: none; place-items: center;
+  box-shadow: 0 0 0 7px var(--card-face), 0 8px 12px var(--shade); }
+.ch .who { padding-top: 10px; font-size: 62px; font-weight: 800; line-height: 1; color: var(--card-face); text-shadow: 0 4px 0 var(--shade); background: linear-gradient(180deg, var(--rc), var(--rc-deep)); }
+.ch[data-who="1"] .who, .ch[data-who="2"] .who { display: grid; }
+.ch.locked { --rc: var(--slot-line); --rc-hi: var(--slot-bg); --rc-deep: var(--slot-ink); }
+.ch.locked img { filter: var(--locked-filter); opacity: .5; }
+.ch .lock { background: linear-gradient(180deg, var(--btn-top), var(--btn-mid) 55%, var(--btn-bot)); }
+.ch .lock svg { width: 56%; height: 56%; fill: none; stroke: var(--btn-ink); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 2px 0 var(--btn-ink-shadow)); }
+.ch.locked .lock { display: grid; }
+/* the price under a locked face: quiet until asked, then the wallet's orange, bigger, glowing */
+.ch .price { position: absolute; left: 0; right: 0; width: fit-content; margin: 0 auto; bottom: -46px; height: 96px; padding: 0 32px 0 12px; border-radius: 48px; display: none; align-items: center; gap: 12px;
+  color: var(--label); font-weight: 800; background: var(--card-face); box-shadow: 0 0 0 6px var(--slot-line), 0 10px 14px var(--shade); transition: scale .2s; }
+.ch .price b { font-size: 64px; line-height: 1; padding-top: 8px; }
+.ch .price .mini-card { width: 62px; height: 62px; border-width: 4px; }
+.ch.locked .price { display: flex; }
+.ch.ask .price { color: var(--card-face); background: linear-gradient(180deg, var(--orange), var(--orange-deep)); text-shadow: 0 4px 0 var(--shade); scale: 1.18;
+  box-shadow: 0 0 0 7px var(--card-face), 0 10px 14px var(--shade), inset 0 -8px 0 var(--shade), inset 0 7px 0 var(--white-a30); animation: askGlow 1.1s ease-in-out infinite; }
+@keyframes askGlow { 50% { filter: drop-shadow(0 0 22px var(--tile-glow)); } }
+/* not enough cards: the price and the wallet shake; the other player's face shakes; a bought / chosen face pops */
+.ch .price.shake, .wallet.shake, .ch.shake { animation: nudge .5s ease-out; }
+@keyframes nudge { 20% { translate: -16px 0; } 40% { translate: 14px 0; } 60% { translate: -9px 0; } 80% { translate: 5px 0; } }
+.ch.pop, .wallet b.pop { animation: chPop .55s cubic-bezier(.2, 1.8, .4, 1); }
+@keyframes chPop { 40% { scale: 1.16; } 70% { scale: .96; } }
 /* close: a lilac system button with an X on the panel's corner, the top bar's size (Toy Catch standard, below) */
-.album-close { position: absolute; right: -30px; top: -30px; --tu: calc(min(1vh, calc(100vw / 177.78)) / var(--k)); width: calc(7.6 * var(--tu)); height: calc(7.6 * var(--tu)); }
-.album-close svg { stroke-width: 3; }
+.chars-close { position: absolute; right: -30px; top: -30px; --tu: calc(min(1vh, calc(100vw / 177.78)) / var(--k)); width: calc(7.6 * var(--tu)); height: calc(7.6 * var(--tu)); }
+.chars-close svg { stroke-width: 3; }
+/* avatar3–6 (512², room round the head) beside avatar1 / 2 (cut to the head): drawn bigger so the heads match (game.js showPicks) */
+.buzzer .dome img.loose, .res-p img.loose, .ptab .face img.loose { scale: 1.25; }
+.ch img.loose { padding: 2px; }
 
 /* ── fx ────────────────────────────────────────────────────────────────── */
 .fx { position: absolute; inset: 0; pointer-events: none; overflow: visible; z-index: 2; }

@@ -6,7 +6,7 @@
 <title>Eye Catch</title>
 <link rel="stylesheet" href="css/font.css?v=54832f73">
 <link rel="stylesheet" href="css/font-ko.css?v=fa5b8de1">
-<link rel="stylesheet" href="css/style.css?v=9e4919ba">
+<link rel="stylesheet" href="css/style.css?v=0b58ee0a">
 </head>
 <body>
 <div id="backdrop" aria-hidden="true"></div>
@@ -39,7 +39,7 @@
 
     <div class="sys sys-left">
       <button class="sys-btn key" id="btnKey" aria-label="발음 인식 서버 키" data-api="unknown"><svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="3.6"/><path d="M11.6 12H20.5M17.6 12v3.2M20.5 12v2.4"/></svg><i class="dot"></i></button>
-      <button class="sys-btn album-btn" id="btnAlbum" aria-label="My cards"><svg viewBox="0 0 24 24"><path d="M5 5.4A2.4 2.4 0 0 1 7.4 3H19.5v14.6H7.4A2.4 2.4 0 0 0 5 20z"/><path d="M5 20a2 2 0 0 0 2 2h12.5v-4.4"/><circle cx="12.4" cy="10.3" r="3.7"/></svg></button>
+      <button class="sys-btn chars-btn" id="btnChars" aria-label="Characters"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.8"/><path d="M7.6 6.6c1.6 1.8 5.4 2.5 8.4.9"/><path d="M9.3 11v1M14.7 11v1"/><path d="M9 15a3.8 3.8 0 0 0 6 0"/></svg></button>
     </div>
     <div class="sys">
       <button class="sys-btn lang" id="btnLang" aria-label="Language: English or Korean"><span class="knob"></span>
@@ -61,12 +61,24 @@
       </div>
     </div>
 
-    <!-- MY CARDS (title): every card won, its word said right, on this device; tap one to hear it -->
-    <div class="album" id="album" aria-live="polite">
-      <div class="album-card">
-        <div class="album-title" id="albumTitle" aria-label="My cards"></div>
-        <div class="album-grid" id="albumGrid"></div>
-        <button class="sys-btn album-close" id="btnAlbumClose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button>
+    <!-- CHARACTERS (title): the cards won buy player faces (game.js); tap a face to give it to the player on the tab -->
+    <div class="chars" id="chars" aria-live="polite">
+      <div class="chars-card">
+        <div class="chars-title" id="charsTitle" aria-label="Characters"></div>
+        <div class="wallet" id="wallet" aria-label="Cards to spend"><i class="mini-card"></i><b>0</b></div>
+        <div class="chars-tabs" id="charTabs">
+          <button class="ptab p1 on" data-p="0"><span class="face"><img src="assets/img/avatar1.webp?v=3d5c3953" alt=""></span><span>Player 1</span></button>
+          <button class="ptab p2" data-p="1"><span class="face"><img src="assets/img/avatar2.webp?v=444c9ece" alt=""></span><span>Player 2</span></button>
+        </div>
+        <div class="chars-grid" id="charGrid">
+          <button class="ch" data-n="1" aria-label="Character 1"><img src="assets/img/avatar1.webp?v=3d5c3953" alt=""></button>
+          <button class="ch" data-n="2" aria-label="Character 2"><img src="assets/img/avatar2.webp?v=444c9ece" alt=""></button>
+          <button class="ch" data-n="3" aria-label="Character 3"><img class="loose" src="assets/img/avatar3.webp?v=e7b26de3" alt=""></button>
+          <button class="ch" data-n="4" aria-label="Character 4"><img class="loose" src="assets/img/avatar4.webp?v=5f575b73" alt=""></button>
+          <button class="ch" data-n="5" aria-label="Character 5"><img class="loose" src="assets/img/avatar5.webp?v=5484eebc" alt=""></button>
+          <button class="ch" data-n="6" aria-label="Character 6"><img class="loose" src="assets/img/avatar6.webp?v=8a720614" alt=""></button>
+        </div>
+        <button class="sys-btn chars-close" id="btnCharsClose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button>
       </div>
     </div>
   </div>
@@ -83,9 +95,9 @@
 <script src="js/bgm-data.js?v=8a047034" onerror="void 0"></script>
 <script src="js/audio.js?v=8cf44fe6"></script>
 <script src="js/mic.js?v=b38b77ba"></script>
-<script src="js/phonics-api.js?v=ce02553b"></script>
+<script src="js/phonics-api.js?v=45656529"></script>
 <script src="js/phonics-progress.js?v=48b311dc"></script>
-<script src="js/stt.js?v=1ff123b8"></script>
+<script src="js/stt.js?v=8966e553"></script>
 <script src="js/monster.js?v=e768859f"></script>
 <script src="js/card3d.js?v=376eb142"></script>
 <script src="js/logo-data.js?v=3e6ef459"></script>
@@ -94,6 +106,6 @@
 <script src="js/hand3d.js?v=87403c2d"></script>
 <script src="js/cards.js?v=d2022510"></script>
 <script src="js/fx.js?v=c37db8b8"></script>
-<script src="js/game.js?v=c9d2471e"></script>
+<script src="js/game.js?v=bdc69931"></script>
 </body>
 </html>

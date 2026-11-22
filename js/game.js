@@ -7,7 +7,8 @@
  * The say turn follows the phonics games' common rules (phonics-kit README "공통 규칙"): a JUMP button skips the word
  * (nobody gets the card), two unclear tries end it ("Good try!"), ~20 s of silence ends it, a word that can't be
  * judged skips it with no card. A finished game is saved to the shared record (js/phonics-progress.js, 'eye-catch').
- * Every card won goes into MY CARDS (the title's album button; localStorage 'ecAlbum'); the result shows 0–3 stars each.
+ * Every card won adds one to the wallet, spent on player faces in CHARACTERS (the title's face button; localStorage
+ * 'ecWallet', 'ecChars', 'ecPick'); the result shows 0–3 stars each.
  * Test hooks: window.__ec; URL ?fast=1 (no rule demo), ?tap=1 (as if there were no microphone), ?fake=1 (scripted verdicts:
  * __ec.fake.push('ok'|'wrong'|'unclear'|'silence'|'nojudge'|'hold') — 'hold' = no verdict for 30 s, to press JUMP).
  */
@@ -283,27 +284,20 @@
   // 2.6 % -> 5.2 % (mostly mitt / meat, a sound apart).
   async function judgeSpeech(pcm16k) {
     const target = answer(), rv = rivals();
-    const dev = STT.judge(pcm16k, target, rv);
+    const dev = () => STT.judge(pcm16k, target, rv);   // (only when the server can't judge)
     if (window.PhonicsAPI && PhonicsAPI.usable()) {
       const r = await PhonicsAPI.analyze(PhonicsAPI.encodeWav(pcm16k, 16000), target);
       if (r.ok) {
         const j = PhonicsAPI.judge(r.data, target, rv, PH);
         STT.last = { by: 'phonics-api', target, ms: r.ms, verdict: j.verdict, heard: j.heard, d: j.d };
-        if (j.verdict === 'ok') return 'ok';
-        // the server heard another picture: the turn is lost only when the on-device recogniser hears another picture
-        // too; if it heard the right word the answer stands, otherwise the player says it once more (user: "머그도 잘
-        // 안되는데", "mitt도", "map도" — a misheard right word ended the turn at once)
-        if (j.verdict === 'wrong') { const d = await dev; if (STT.last) STT.last.dev = d; return d === 'ok' ? 'ok' : d === 'wrong' ? 'wrong' : 'unclear'; }
-        // no 'nearest picture' pass any more: it let any sound through that was a little closer to the answer than to the
-        // other pictures (up to 1.3 sounds off per sound) for +1 % right words (user 2026-11-22: "잘못말해도 카드가
-        // 획득되는데?"). Unclear to the server = the on-device recogniser must hear the word itself.
-        const d = await dev;
-        if (d === 'ok') { STT.last.dev = 'ok'; return 'ok'; }
-        return 'unclear';
+        // phonics-api first, always (user 2026-11-22: "phonics-api 가 무조건 우선이지"): when the server answered, its
+        // verdict stands — the on-device recogniser no longer overrules a 'wrong' or an 'unclear'. It judges only when the
+        // server can't (no key, offline, busy, timeout) — below.
+        return j.verdict === 'ok' ? 'ok' : j.verdict === 'wrong' ? 'wrong' : 'unclear';
       }
       if (Q.has('log')) console.log('phonics-api failed -> on-device', r.reason, r.status || '');
     }
-    return dev;
+    return dev();
   }
   function round(tok) {
     G.phase = 'race'; G.locked = [false, false];
@@ -472,7 +466,7 @@
   async function win(p, tok) {
     G.phase = 'reveal';
     const w = answer();
-    addToAlbum(w);                                 // said right: into MY CARDS (stays there even if the card goes back later)
+    earnCard();                                    // said right: +1 in the wallet (kept even if the card goes back later)
     hitCards([G.left, G.right], w);
     mon.cheer(); mon.lookAt(null); Card3D.burst();
     FX.ribbon(...SLOT.L, 520); setTimeout(() => FX.ribbon(...SLOT.R, 520), 160);
@@ -623,45 +617,84 @@
     S.say('t:playagain');
   }
 
-  // ── MY CARDS (title): every card won — its word said right — goes into this device's album, { word: times won }.
-  // A card given back for a wrong word (loseCard) stays in it: the album is the words you have said right.
-  // The 18 words as round cards (sky / pink by turns, like the piles), "×N" on each one won, a '?' slot for the rest;
-  // tap one = "/m/ /m/ word"
-  const ALBUM = 'ecAlbum', albumEl = $('#album');
-  let album = {};
-  try { album = JSON.parse(localStorage.getItem(ALBUM) || '{}') || {}; } catch (e) { album = {}; }
-  function addToAlbum(w) {
-    album[w] = (album[w] || 0) + 1;
-    try { localStorage.setItem(ALBUM, JSON.stringify(album)); } catch (e) { /* storage off: this visit only */ }
+  // ── CHARACTERS (title): the cards won are spent on player faces (user 2026-11-22: "획득한 카드를 쓸곳이 없는데 보상이라
+  // 할수 없어"; like Phonics Match's coins -> outfits). Wallet = every card won — its word said right (win) — minus the
+  // cards spent; a card given back for a wrong word (loseCard) leaves it as it is. avatar1 / avatar2 are free (Player 1 /
+  // Player 2 at first); avatar3–6 cost 5 / 10 / 15 / 20. A locked face: the first tap lights its price, the second buys
+  // it when the wallet has enough (and gives it to the player on the tab), else the price and the wallet shake. One face
+  // per player: the other player's face is refused with a shake.
+  // localStorage: ecWallet { earned, spent } (seeded once from MY CARDS' 'ecAlbum', { word: times won }, the album this
+  // replaced), ecChars [bought faces], ecPick { p1, p2 } (avatar numbers)
+  const PRICE = { 3: 5, 4: 10, 5: 15, 6: 20 };
+  const load = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } };
+  const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage off: this visit only */ } };
+  let wallet = load('ecWallet', null);
+  if (!wallet || typeof wallet.earned !== 'number') {
+    wallet = { earned: Object.values(load('ecAlbum', {}) || {}).reduce((a, n) => a + (+n || 0), 0), spent: 0 };
+    save('ecWallet', wallet);
   }
+  const left = () => wallet.earned - wallet.spent;
+  function earnCard() { wallet.earned++; save('ecWallet', wallet); }
+  const charsEl = $('#chars'), walletEl = $('#wallet'), charEls = [...document.querySelectorAll('#charGrid .ch')];
+  const SRC = Object.fromEntries(charEls.map(b => [b.dataset.n, b.querySelector('img').getAttribute('src')]));
+  const owned = new Set([1, 2, ...[].concat(load('ecChars', [])).filter(n => PRICE[n])]);
+  let pick = load('ecPick', {}) || {};
+  if (!owned.has(pick.p1) || !owned.has(pick.p2) || pick.p1 === pick.p2) pick = { p1: 1, p2: 2 };
+  /** the chosen faces on the buttons, the result and the panel's tabs; avatar3–6 are 512² with room round the head (neck,
+   *  pigtails, ears) where avatar1 / 2 are cut to the head: 'loose' draws them bigger so the heads match */
+  function showPicks() {
+    [pick.p1, pick.p2].forEach((n, p) => {
+      [buzzEl[p].querySelector('.dome img'), $(`.res-p.p${p + 1} > img`), $(`#charTabs [data-p="${p}"] img`)].forEach(im => { im.src = SRC[n]; im.classList.toggle('loose', n > 2); });
+    });
+  }
+  const LOCK = '<svg viewBox="0 0 24 24"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2.4"/><path d="M8.5 10.5V8.2a3.5 3.5 0 0 1 7 0v2.3"/></svg>';
+  charEls.forEach(b => b.insertAdjacentHTML('beforeend', '<b class="who"></b>'
+    + (PRICE[b.dataset.n] ? `<i class="lock">${LOCK}</i><span class="price"><i class="mini-card"></i><b>${PRICE[b.dataset.n]}</b></span>` : '')));
   // the title in the logo's candy colours, letter by letter
   const TITLE_C = [['--p1', '--p1-deep'], ['--p2', '--p2-deep'], ['--orange', '--orange-deep'], ['--mic-on', '--mic-on-deep']];
-  $('#albumTitle').innerHTML = [...'MY CARDS'].map((ch, i) => ch === ' ' ? '<i class="gap"></i>'
-    : `<span style="--c:var(${TITLE_C[i % 4][0]});--cd:var(${TITLE_C[i % 4][1]})">${ch}</span>`).join('');
-  function openAlbum() {
-    S.sfx('tap');
-    const ART = window.EC_CARD_ART || {};
-    $('#albumGrid').innerHTML = Cards.words.map((w, i) => {
-      const n = album[w] || 0;
-      if (!n) return '<div class="acard empty"><span class="coin">?</span><span class="name">?</span></div>';
-      return `<button class="acard ${(i + Math.floor(i / 6)) % 2 ? 'pink' : 'sky'}" data-w="${w}" aria-label="${w}"><span class="coin"><img src="${ART[w] || Cards.byW[w].img}" alt="" draggable="false"></span>`
-        + `<b class="times">×${n}</b><span class="name"><b>${w[0]}</b>${w.slice(1)}</span></button>`;
-    }).join('');
-    $('#albumGrid').querySelectorAll('button.acard').forEach(b => b.addEventListener('click', () => {
-      b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump');
-      S.stopVoice(); S.chant(b.dataset.w);
-    }));
-    albumEl.classList.add('show');
+  $('#charsTitle').innerHTML = [...'CHARACTERS'].map((ch, i) => `<span style="--c:var(${TITLE_C[i % 4][0]});--cd:var(${TITLE_C[i % 4][1]})">${ch}</span>`).join('');
+  let tab = 0, asking = 0;                         // the player choosing (0 / 1); the locked face whose price is lit
+  function renderChars() {
+    walletEl.querySelector('b').textContent = left();
+    document.querySelectorAll('#charTabs .ptab').forEach(t => t.classList.toggle('on', +t.dataset.p === tab));
+    charEls.forEach(b => {
+      const n = +b.dataset.n, who = n === pick.p1 ? 1 : n === pick.p2 ? 2 : 0;
+      b.classList.toggle('locked', !owned.has(n)); b.classList.toggle('ask', n === asking);
+      b.classList.toggle('mine', who === tab + 1);
+      b.dataset.who = who || ''; b.querySelector('.who').textContent = who || '';
+    });
   }
-  function closeAlbum() { S.sfx('tap'); S.stopVoice(); albumEl.classList.remove('show'); }
-  $('#btnAlbum').addEventListener('click', openAlbum);
-  $('#btnAlbumClose').addEventListener('click', closeAlbum);
+  function jiggle(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), 700); }
+  function tapChar(b) {
+    const n = +b.dataset.n, me = tab ? 'p2' : 'p1', other = tab ? 'p1' : 'p2';
+    if (!owned.has(n)) {
+      if (asking !== n) { asking = n; S.sfx('tap'); renderChars(); return; }
+      if (left() < PRICE[n]) { S.sfx('wrong'); jiggle(b.querySelector('.price'), 'shake'); jiggle(walletEl, 'shake'); return; }
+      wallet.spent += PRICE[n]; save('ecWallet', wallet);
+      owned.add(n); save('ecChars', [...owned].filter(k => PRICE[k]));
+      asking = 0; pick[me] = n; save('ecPick', pick);
+      renderChars(); showPicks(); jiggle(b, 'pop'); jiggle(walletEl.querySelector('b'), 'pop');
+      const c = FX.center(b); FX.sparkles(c.x, c.y, 22, 300); S.sfx('right');
+      return;
+    }
+    asking = 0;
+    if (pick[other] === n) { S.sfx('wrong'); renderChars(); jiggle(b, 'shake'); return; }   // the other player's face
+    if (pick[me] !== n) { pick[me] = n; save('ecPick', pick); showPicks(); }
+    S.sfx('pop'); renderChars(); jiggle(b, 'pop');
+  }
+  charEls.forEach(b => b.addEventListener('click', () => tapChar(b)));
+  document.querySelectorAll('#charTabs .ptab').forEach(t => t.addEventListener('click', () => { tab = +t.dataset.p; asking = 0; S.sfx('tap'); renderChars(); }));
+  function openChars() { S.sfx('tap'); tab = 0; asking = 0; renderChars(); charsEl.classList.add('show'); }
+  function closeChars() { S.sfx('tap'); charsEl.classList.remove('show'); }
+  $('#btnChars').addEventListener('click', openChars);
+  $('#btnCharsClose').addEventListener('click', closeChars);
+  showPicks();
 
   // ── inputs ────────────────────────────────────────────────────────────────────────────────────────────
   buzzEl.forEach((b, i) => b.addEventListener('pointerdown', (e) => { e.preventDefault(); buzz(i); }));
   addEventListener('keydown', (e) => {
     if (e.repeat) return;
-    if (albumEl.classList.contains('show')) { if (e.code === 'Escape') closeAlbum(); return; }
+    if (charsEl.classList.contains('show')) { if (e.code === 'Escape') closeChars(); return; }
     if (G.screen === 'title' && (e.code === 'Space' || e.code === 'Enter')) { startGame(); return; }
     if (['KeyA', 'KeyQ', 'ArrowLeft', 'ShiftLeft'].includes(e.code)) buzz(0);
     if (['KeyL', 'KeyP', 'ArrowRight', 'ShiftRight'].includes(e.code)) buzz(1);
@@ -700,6 +733,7 @@
   requestAnimationFrame(tick);
   if (Q.has('tap')) Mic.state = 'none';
   PhonicsAPI.init().then(showApi);
-  window.__ec = { G, buzz, startGame, showTitle, fake, mon, M3, wait, held, judgeSpeech, jump: () => jumpNow && jumpNow(), album: () => album, openAlbum, closeAlbum };
+  window.__ec = { G, buzz, startGame, showTitle, fake, mon, M3, wait, held, judgeSpeech, jump: () => jumpNow && jumpNow(),
+    chars: () => ({ wallet: left(), earned: wallet.earned, spent: wallet.spent, owned: [...owned], pick: { ...pick } }), openChars, closeChars };
   window.__ready = true;
 })();

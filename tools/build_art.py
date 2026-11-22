@@ -283,7 +283,7 @@ ART['tin'] = {'w': tin.width, 'h': tin.height, 'ref': [tx, ty]}
 import hashlib, re
 html = ROOT / 'index.html'
 h = html.read_text(encoding='utf-8')
-for f in ('logo', 'logo-game', 'start', 'avatar1', 'avatar2', 'match'):
+for f in ('logo', 'logo-game', 'start', 'avatar1', 'avatar2', 'avatar3', 'avatar4', 'avatar5', 'avatar6', 'match'):
     v = hashlib.md5((IMG / f'{f}.webp').read_bytes()).hexdigest()[:8]
     h = re.sub(rf'assets/img/{f}\.webp(\?v=[0-9a-f]+)?', f'assets/img/{f}.webp?v={v}', h)
 html.write_text(h, encoding='utf-8')
