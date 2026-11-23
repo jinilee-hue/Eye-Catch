@@ -4,7 +4,8 @@
  * same lights as the tutor, floats, spins like a coin, and its matched picture gets the video's yellow tile.
  * Faces are redrawn only while something on them animates (hit pop, hint wiggle, wrong shake).
  *
- * Card3D.make(words, {style:'sky'|'pink'|'gold'|'plain'}) -> card (backs are always the deck's gold)
+ * Card3D.make(words, {style:'sky'|'pink'|'gold'|'plain', turn: degrees, mix: bool}) -> card (backs are always the deck's gold);
+ *   4–8 pictures: upright rows, or turned up to ±turn and packed (mix = different sizes) — layout(), Card3D.layout for QA
  *   card.root (THREE.Group), card.words, card.place(sx, sy, z), card.hit(w, on), card.hint(w), card.wrong(w),
  *   card.symScreen(w) -> stage px, card.topScreen() -> stage px of its top edge, tweens: spinIn, slideTo, flyTo, gone,
  *   card.dispose(). Card3D.pick(clientX, clientY) -> {card, word} | null. Card3D.deck(n) — the face-down stack.
@@ -111,16 +112,115 @@
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
     return (haloTexCache[style] = t);
   }
-  // slots in FACE units (face radius = 1). Pictures only, big (user: "텍스트를 빼고 이미지가 크게 보여줘야해"):
-  // 0.50 across, rows 0.53 apart, middle row at ±0.56, corner pairs at ±0.29 -> boxes never touch, corners inside r 0.97
-  const ROWS = [
-    [[-0.29, -0.53], [0.29, -0.53], [-0.56, 0], [0, 0], [0.56, 0], [0, 0.53]],
-    [[0, -0.53], [-0.56, 0], [0, 0], [0.56, 0], [-0.29, 0.53], [0.29, 0.53]],
-  ];
+  // slots in FACE units (face radius = 1), per picture count (the level's: game.js LEVELS). Pictures only, big (user:
+  // "텍스트를 빼고 이미지가 크게 보여줘야해").
+  // Upright cards (levels 1–3): rows of equal boxes s across on the 6-picture rule — rows s+0.03 apart, columns s+0.06 (a
+  // pair s+0.08), box corners inside r 0.97 — each count as big as that rule allows (a search over the row patterns):
+  // 4 = 2-2 (0.65), 5 = 3-2 / 2-3 (0.55), 6 = 2-3-1 / 1-3-2 (0.50: rows 0.53 apart, middle row at ±0.56, pairs at ±0.29)
+  const ROWS = {
+    4: { s: 0.65, v: [[[-0.355, -0.34], [0.355, -0.34], [-0.355, 0.34], [0.355, 0.34]]] },
+    5: { s: 0.55, v: [
+      [[-0.61, -0.1], [0, -0.1], [0.61, -0.1], [-0.315, 0.48], [0.315, 0.48]],
+      [[-0.315, -0.48], [0.315, -0.48], [-0.61, 0.1], [0, 0.1], [0.61, 0.1]]] },
+    6: { s: 0.50, v: [
+      [[-0.29, -0.53], [0.29, -0.53], [-0.56, 0], [0, 0], [0.56, 0], [0, 0.53]],
+      [[0, -0.53], [-0.56, 0], [0, 0], [0.56, 0], [-0.29, 0.53], [0.29, 0.53]]] },
+  };
+  // Turned cards (levels 4–6, opts.turn = the most a picture turns, degrees): at any angle a picture needs the circle round
+  // it (its diagonal), so the circles are packed — one near the middle, the rest round the rim, pushed apart until no two
+  // are closer than their radii + 0.02 and all lie inside r 0.97. They start at the best packing of equal circles in a
+  // circle (OPT: radius per count) and shrink by 1 % until they fit: 6 and 7 -> r 0.31, 8 -> r 0.285 (face units).
+  // opts.mix (level 6): different sizes, radii 1.2 … 0.8 of each other, shuffled
+  const OPT = { 4: 0.4142, 5: 0.3702, 6: 0.3333, 7: 0.3333, 8: 0.3026, 9: 0.2768 };
+  const AR = Object.fromEntries(W.map(w => [w.w, w.ar || 1]));     // picture width / height (js/words.js)
   const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
   const cards = new Set();
   const TEX = 1024, FR = TEX / 2;                    // canvas px per face radius
+
+  function packCircles(mult) {
+    const n = mult.length, R = 0.97, GAP = 0.02;
+    let f = (OPT[n] || 0.9 / Math.sqrt(n)) * R * Math.sqrt(n / mult.reduce((a, m) => a + m * m, 0));
+    for (; f > 0.05; f *= 0.99) {
+      const r = mult.map(m => f * m);
+      for (let attempt = 0; attempt < 6; attempt++) {
+        const p = [], a0 = rnd(0, 2 * PI);
+        shuffle([...Array(n).keys()]).forEach((i, k) => {
+          if (!k) { p[i] = [rnd(-0.02, 0.02), rnd(-0.02, 0.02)]; return; }
+          const a = a0 + (k - 1) * 2 * PI / max(1, n - 1), rho = R - r[i];
+          p[i] = [rho * cos(a), rho * sin(a)];
+        });
+        for (let it = 0; it < 500; it++) {
+          let worst = 0;
+          for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+            const dx = p[j][0] - p[i][0], dy = p[j][1] - p[i][1], d = Math.hypot(dx, dy) || 1e-6, need = r[i] + r[j] + GAP;
+            if (d >= need) continue;
+            worst = max(worst, need - d);
+            const k = (need - d) / 2 / d * 1.01;
+            p[i][0] -= dx * k; p[i][1] -= dy * k; p[j][0] += dx * k; p[j][1] += dy * k;
+          }
+          for (let i = 0; i < n; i++) {
+            const L = Math.hypot(p[i][0], p[i][1]);
+            if (L + r[i] > R) { worst = max(worst, L + r[i] - R); const k = (R - r[i]) / L; p[i][0] *= k; p[i][1] *= k; }
+          }
+          if (worst < 1e-5) return p.map((q, i) => ({ x: q[0], y: q[1], r: r[i] }));
+        }
+      }
+    }
+    return mult.map((m, i) => ({ x: 0.5 * cos(i), y: 0.5 * sin(i), r: 0.1 }));   // never reached
+  }
+  /** a picture as drawn (its own width / height in its box, turned): the four corners, canvas px */
+  function corners(sl) {
+    const ar = AR[sl.w] || 1, w = (ar >= 1 ? sl.s : sl.s * ar) / 2, h = (ar >= 1 ? sl.s / ar : sl.s) / 2, c = cos(sl.rot), s = sin(sl.rot);
+    return [[-w, -h], [w, -h], [w, h], [-w, h]].map(([x, y]) => [sl.x + x * c - y * s, sl.y + x * s + y * c]);
+  }
+  /** two drawn pictures at least `gap` px apart (separating axes of the two turned rectangles) */
+  function apart(a, b, gap = 4) {
+    const A = corners(a), B = corners(b);
+    for (const P of [A, B]) for (let i = 0; i < 2; i++) {
+      const ex = P[i + 1][0] - P[i][0], ey = P[i + 1][1] - P[i][1], l = Math.hypot(ex, ey) || 1, nx = -ey / l, ny = ex / l;
+      const pa = A.map(([x, y]) => x * nx + y * ny), pb = B.map(([x, y]) => x * nx + y * ny);
+      if (max(...pa) + gap <= min(...pb) || max(...pb) + gap <= min(...pa)) return true;
+    }
+    return false;
+  }
+  /** where the pictures go on a face: [{w, x, y, s (box, px), rot}] in canvas px. opts.turn (degrees), opts.mix */
+  function layout(words, opts = {}) {
+    const n = words.length, turn = opts.turn || 0, rows = !turn && ROWS[n];
+    let slots;
+    if (rows) {
+      const at = shuffle(rows.v[Math.floor(Math.random() * rows.v.length)].map(s => s.slice()));
+      slots = words.map((w, i) => ({ w, x: FR + (at[i][0] + rnd(-0.012, 0.012)) * FR, y: FR + (at[i][1] + rnd(-0.008, 0.008)) * FR,
+        s: rows.s * rnd(0.97, 1.03) * FR, rot: rnd(-7, 7) * PI / 180 }));
+      // keep every picture inside the face (the raised rim starts at radius 1)
+      for (const sl of slots) {
+        const hw = sl.s / 2;
+        for (let it = 0; it < 30; it++) {
+          const dx = sl.x - FR, dy = sl.y - FR;
+          const far = Math.max(...[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, b]) => Math.hypot(dx + a * hw, dy + b * hw)));
+          if (far <= FR * 0.98) break;
+          sl.x = FR + dx * 0.97;
+        }
+      }
+    } else {
+      // the circle round a picture of radius r: its box s = 2r / √(1 + (short / long side)²) — a long picture gets a longer box
+      const mult = shuffle(words.map((_, i) => opts.mix ? 1.2 - 0.4 * i / max(1, n - 1) : 1));
+      const circ = packCircles(mult);
+      slots = words.map((w, i) => {
+        const c = circ[i], q = min(AR[w] || 1, 1 / (AR[w] || 1));
+        return { w, x: FR + c.x * FR, y: FR + c.y * FR, s: 2 * c.r / Math.sqrt(1 + q * q) * FR, rot: rnd(-turn, turn) * PI / 180 };
+      });
+    }
+    // the drawn pictures never overlap or cross the rim: a pair that comes too close (the rows' jitter, now and then) gets
+    // 3 % smaller, and so does a picture past r 0.98
+    for (let it = 0; it < 40; it++) {
+      let ok = true;
+      for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) if (!apart(slots[i], slots[j])) { slots[i].s *= 0.97; slots[j].s *= 0.97; ok = false; }
+      for (const sl of slots) if (max(...corners(sl).map(([x, y]) => Math.hypot(x - FR, y - FR))) > FR * 0.98) { sl.s *= 0.97; ok = false; }
+      if (ok) break;
+    }
+    return slots;
+  }
 
   function make(words, opts = {}) {
     const style = opts.style || 'sky';
@@ -130,23 +230,8 @@
     const ctx = canvas.getContext('2d');
     const tex = new THREE.CanvasTexture(canvas); tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = S.renderer.capabilities.getMaxAnisotropy();
-    const slots = shuffle(ROWS[Math.random() < 0.5 ? 0 : 1].map(s => s.slice()));
-    words.forEach((w, i) => {
-      const [sx, sy] = slots[i];
-      card.slots.push({ w, x: FR + (sx + rnd(-0.012, 0.012)) * FR, y: FR + (sy + rnd(-0.008, 0.008)) * FR,
-        s: 0.50 * rnd(0.97, 1.03) * FR, rot: rnd(-7, 7) * PI / 180, k: 1, tile: 0, wig: 0, shake: 0 });
-    });
-    const labelPx = 0.095 * FR;
-    // keep every picture inside the face (the raised rim starts at radius 1)
-    for (const sl of card.slots) {
-      const hw = sl.s / 2;
-      for (let it = 0; it < 30; it++) {
-        const dx = sl.x - FR, dy = sl.y - FR;
-        const far = Math.max(...[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, b]) => Math.hypot(dx + a * hw, dy + b * hw)));
-        if (far <= FR * 0.98) break;
-        sl.x = FR + dx * 0.97;
-      }
-    }
+    // the pictures' places: rows (upright) or packed and turned (opts.turn, opts.mix) — layout() above
+    card.slots = layout(words, opts).map(sl => Object.assign(sl, { k: 1, tile: 0, wig: 0, shake: 0 }));
     card.draw = function () {
       // flat white over the WHOLE square: with transparent corners the texture's smaller mip levels mixed black into the
       // disc's edge, a dark broken ring on cards seen at a slant (user: "흰색카드에 안에 원 테두리가 검은색 들어가 깨져보여").
@@ -488,5 +573,5 @@
   /** a match: the rays flare up and the sparkles brighten for a moment */
   function burst() { if (amb) amb.boost = 1; }
 
-  window.Card3D = { make, ambient, burst, deckPeek, pick, ready, setDeck, hideDeck, drawLogo2, logoReady, all: cards };
+  window.Card3D = { make, ambient, burst, deckPeek, pick, ready, setDeck, hideDeck, drawLogo2, logoReady, all: cards, layout, FR };
 })();

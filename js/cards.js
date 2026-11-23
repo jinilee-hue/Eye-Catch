@@ -1,6 +1,7 @@
-/* Eye Catch — cards. 18 pictures (FPR K Unit 1 Lesson 1, the lesson pack's m-words), 6 on a card.
- * The deck is a chain: card i and card i+1 share exactly ONE picture (the round's answer): card i+1 = one picture
- * of card i + five of the six pictures card i doesn't have. Answers are spread evenly over the words.
+/* Eye Catch — cards. 18 pictures (FPR K Unit 1 Lesson 1, the lesson pack's m-words), 4–8 on a card (the level's count;
+ * 6 by default). The deck is a chain: card i and card i+1 share exactly ONE picture (the round's answer): card i+1 = one
+ * picture of card i + per−1 of the pictures card i doesn't have (18 − per ≥ per − 1, so up to 9). Answers are spread
+ * evenly over the words.
  * The cards themselves are 3D (js/card3d.js).
  */
 (function () {
@@ -11,11 +12,11 @@
   const rnd = (a, b) => a + Math.random() * (b - a);
   const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
-  /** n cards; answers[i] = the picture shared by cards[i] and cards[i+1] */
-  function makeDeck(n, first) {
+  /** n cards of `per` pictures; answers[i] = the picture shared by cards[i] and cards[i+1] */
+  function makeDeck(n, first, per = PER) {
     const all = W.map(w => w.w);
     const used = Object.fromEntries(all.map(w => [w, 0]));
-    const cards = [shuffle(all.slice()).slice(0, PER)];
+    const cards = [shuffle(all.slice()).slice(0, per)];
     if (first && !cards[0].includes(first)) cards[0][0] = first;    // QA: the first round's answer (?answer=)
     const answers = [];
     for (let i = 1; i < n; i++) {
@@ -25,7 +26,7 @@
       const pool = shuffle(prev.filter(w => w !== last)).sort((a, b) => used[a] - used[b]);
       const s = i === 1 && first ? first : pool[0];
       used[s]++;
-      const rest = shuffle(all.filter(w => !prev.includes(w))).slice(0, PER - 1);
+      const rest = shuffle(all.filter(w => !prev.includes(w))).slice(0, per - 1);
       cards.push(shuffle([s, ...rest]));
       answers.push(s);
     }

@@ -265,6 +265,16 @@ img { -webkit-user-drag: none; user-select: none; }
    saturation is baked into logo-game.webp */
 .game-logo { position: absolute; left: 50%; top: calc(84px - var(--ey)); width: 520px;   /* bigger (user); a little lower (user: "게임화면에서는 로고 밑으로 조금 내려줘") */ transform: translateX(-50%); pointer-events: none; filter: drop-shadow(0 8px 10px var(--cream-shadow)); }
 
+/* the level (game.js LEVELS), display only: a small capsule in the top buttons' lilac right under the logo — "LEVEL n".
+   SKIP takes the same spot while the rules are explained, so the tag steps aside then */
+.lv-tag { position: absolute; left: 50%; translate: -50% 0; top: calc(482px - var(--ey)); height: 74px; padding: 6px 30px 0 32px; border-radius: 37px;
+  display: flex; align-items: center; gap: 12px; pointer-events: none; color: var(--btn-ink); font-weight: 800; line-height: 1;
+  text-shadow: 0 3px 0 var(--btn-ink-shadow); background: linear-gradient(180deg, var(--btn-top), var(--btn-mid) 55%, var(--btn-bot));
+  box-shadow: 0 8px 14px var(--btn-drop), inset 0 4px 0 var(--btn-gloss); transition: opacity .3s; }
+.lv-tag span { font-size: 36px; letter-spacing: .08em; }
+.lv-tag b { font-size: 52px; }
+.skip-btn.show ~ .lv-tag { opacity: 0; }
+
 /* the word, big, after a match: under the small logo, above the cards (the tutor stands at the bottom) */
 .wordpop { position: absolute; left: 50%; top: 900px; z-index: 3; opacity: 0; pointer-events: none; transform: translate(-50%, -50%); }
 /* the word as a picture card, like the other phonics games' cards (Croco Phonics): the picture on top, the word under it
@@ -365,6 +375,21 @@ img { -webkit-user-drag: none; user-select: none; }
 .res-p.win { animation: winBob 1.2s ease-in-out infinite; }
 @keyframes winBob { 50% { transform: translateY(-14px) scale(1.04); } }
 .res-title { margin: 228px 0 50px; /* room for the stars */ font-size: 120px; font-weight: 800; color: var(--ink-black); line-height: 1.05; }
+/* LEVEL UP! (game.js finish, the next game is one level up): the words in the logo's candy colours (like CHARACTERS) and
+   the new level on a gold medal, popping in after the stars, the medal glowing */
+.res-level { display: none; align-items: center; justify-content: center; gap: 34px; margin: -12px 0 58px; }
+.result.up .res-level { display: flex; animation: lvUp .7s cubic-bezier(.2, 1.6, .4, 1) 1.4s both; }
+.res-level .lu { font-size: 108px; font-weight: 800; line-height: 1; padding-top: 12px; letter-spacing: .02em; }
+.res-level .lu span { color: var(--c); text-shadow: 0 8px 0 var(--cd), 0 14px 16px var(--shade); }
+.res-level .medal { width: 150px; height: 150px; border-radius: 50%; display: grid; place-content: center; flex: none; color: var(--card-face);
+  background: linear-gradient(180deg, var(--rim-l) 0 30%, var(--rim-l-deep) 70%, var(--crown-gold-deep));   /* no pale top: white "LEVEL" reads */
+  box-shadow: 0 0 0 9px var(--card-face), 0 0 0 15px var(--rim-l), 0 16px 20px var(--shade), inset 0 -9px 0 var(--shade), inset 0 7px 0 var(--white-a30);
+  text-shadow: 0 4px 0 var(--orange-deep); line-height: .9; font-weight: 800; }
+.result.up .res-level .medal { animation: lvGlow 1.6s ease-in-out 2.1s infinite; }
+.res-level .medal small { font-size: 32px; letter-spacing: .08em; text-shadow: 0 3px 0 var(--orange-deep); }
+.res-level .medal b { font-size: 84px; padding-top: 4px; }
+@keyframes lvUp { from { transform: scale(.2) rotate(-8deg); opacity: 0; } }
+@keyframes lvGlow { 50% { filter: drop-shadow(0 0 24px var(--tile-glow)); scale: 1.06; } }
 .res-btns { display: flex; justify-content: center; gap: 50px; }
 .pill { display: flex; align-items: center; gap: 22px; height: 160px; padding: 10px 64px 0 50px; border-radius: 80px; font-size: 72px; font-weight: 800; color: var(--card-face);
   box-shadow: 0 18px 20px var(--shade), inset 0 -11px 0 var(--shade), inset 0 12px 0 var(--white-a30); text-shadow: 0 4px 0 var(--shade); }   /* no tan rings, no brown shadow (user) */

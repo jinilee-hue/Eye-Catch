@@ -9,6 +9,9 @@
  * judged skips it with no card. A finished game is saved to the shared record (js/phonics-progress.js, 'eye-catch').
  * Every card won adds one to the wallet, spent on player faces in CHARACTERS (the title's face button; localStorage
  * 'ecWallet', 'ecChars', 'ecPick'); the result shows 0–3 stars each.
+ * Levels (LEVELS, phonics-kit README "공통 규칙: 레벨"): never picked, one for the device — START plays the saved level
+ * (localStorage 'ecLevel' { level, poor }); 7+ of the 10 cards won together -> the next game is one up ("LEVEL UP!" on the
+ * result), 4 or fewer twice in a row -> one down, else the same. The game screen shows "LEVEL n" under the logo.
  * Test hooks: window.__ec; URL ?fast=1 (no rule demo), ?tap=1 (as if there were no microphone), ?fake=1 (scripted verdicts:
  * __ec.fake.push('ok'|'wrong'|'unclear'|'silence'|'nojudge'|'hold') — 'hold' = no verdict for 30 s, to press JUMP).
  */
@@ -20,6 +23,17 @@
   const stage = $('#stage');
   const ROUNDS = 10;
   const SPARE = 10;                                // cards a lost card can add to the deck (one more round each), at most
+  // the levels, easy to hard by steps (user 2026-11-22): per = pictures on a card, turn = the most a picture is turned
+  // (degrees; else upright rows), mix = pictures in different sizes, idle = seconds before nobody's answer shows (42)
+  const LEVELS = [
+    { per: 4 },                                    // 1: 4 pictures, rows 2-2
+    { per: 5 },                                    // 2: 5, rows 3-2 / 2-3
+    { per: 6 },                                    // 3: 6, rows 2-3-1 / 1-3-2 (the game before levels)
+    { per: 6, turn: 90 },                          // 4: 6, turned up to a quarter either way
+    { per: 7, turn: 180 },                         // 5: 7, turned any way
+    { per: 8, turn: 180, mix: true, idle: 30 },    // 6: 8, turned any way, different sizes, the answer shows after 30 s
+  ];
+  const GOOD = 7, POOR = 4;                        // cards the two players won together: >= GOOD up, <= POOR poor
   const G = { tok: 0, screen: 'title', phase: 'idle', scores: [0, 0], locked: [false, false], r: 0, deck: null, left: null, right: null, taught: false, helloed: false, timers: [] };
   const fake = [];
   const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -176,7 +190,8 @@
   const YAW = { L: 0.48, R: -0.48 };                // ~27° in toward the middle (user: "영상처럼 카드 각도를 가운데로")
   /** a 3D game card in slot L / R; anim 'flip' = spins in from the deck like a coin */
   function putCard(slot, words, side, anim) {
-    const c = Card3D.make(words, { style: side === 'left' ? 'sky' : 'pink' });
+    const L = LEVELS[G.lv - 1] || {};
+    const c = Card3D.make(words, { style: side === 'left' ? 'sky' : 'pink', turn: L.turn, mix: L.mix });
     c.place(...SLOT[slot], -1.5, CARD);
     c.yawTo(YAW[slot]);                              // both turned in toward the middle, like the reference video
     if (anim === 'flip') {
@@ -195,12 +210,13 @@
     G.screen = 'game'; G.phase = 'intro'; G.scores = [0, 0]; G.r = 0; G.locked = [false, false]; G.pressed = [false, false];
     G.said = 0; G.jumps = 0; G.jumpTold = false; G.t0 = 0;   // for the record (finish) and the JUMP guide (once a game)
     G.lost = [0, 0]; G.rounds = ROUNDS;              // cards each player gave back for a wrong word; rounds (+1 per card back)
+    G.lv = LV.level; $('#lvTag b').textContent = G.lv; $('#lvTag').setAttribute('aria-label', 'Level ' + G.lv);   // the saved level
     clearTimers(); S.stopVoice();
     stage.dataset.screen = 'game';
     $('#result').classList.remove('show'); if (window.Crown3D) Crown3D.hide();
     clearTitleCards(); disposeGameCards(); Tin3D.show(false); Card3D.ambient(true, ...DECK);
     resetBuzzers(); renderScores(); hideWord(); dropJump();
-    G.deck = Cards.makeDeck(ROUNDS + 1 + SPARE, Q.get('answer'));   // the chain goes on for the cards that come back
+    G.deck = Cards.makeDeck(ROUNDS + 1 + SPARE, Q.get('answer'), LEVELS[G.lv - 1].per);   // the chain goes on for the cards that come back
     setDeckN(ROUNDS + 1);
     mon.setShadow(false); mon.lookAt(null); mon.rest = 'up'; mon.pose('up'); mon.setGrip(false);
     placeMonster('game', 700);
@@ -243,7 +259,7 @@
   }
   async function teachSteps(on) {                    // on() = still explaining (not skipped, same game)
     if (!G.helloed) { G.helloed = true; mon.wave(1); await S.say('t:hello'); if (!on()) return; }
-    const demo = Cards.makeDeck(2);
+    const demo = Cards.makeDeck(2, null, LEVELS[G.lv - 1].per);
     const L = putCard('L', demo.cards[0], 'left', 'flip'); G.extra = [L];
     await wait(240); if (!on()) return;
     const R = putCard('R', demo.cards[1], 'right', 'flip'); G.extra.push(R);
@@ -315,10 +331,11 @@
   }
   function armTimers(tok) {
     clearTimers();
+    const idle = ((LEVELS[G.lv - 1] || {}).idle || 42) * 1000;   // hints at a third and two thirds of it (14 s, 28 s, 42 s)
     G.timers.push(setTimeout(() => { if (alive(tok) && G.phase === 'race') [0, 1].forEach(p => cue(p, true)); }, 6000));
-    G.timers.push(setTimeout(() => { if (alive(tok) && G.phase === 'race') hint(); }, 14000));
-    G.timers.push(setTimeout(() => { if (alive(tok) && G.phase === 'race') hint(); }, 28000));
-    G.timers.push(setTimeout(() => { if (alive(tok) && G.phase === 'race') nobody(tok); }, 42000));
+    G.timers.push(setTimeout(() => { if (alive(tok) && G.phase === 'race') hint(); }, idle / 3));
+    G.timers.push(setTimeout(() => { if (alive(tok) && G.phase === 'race') hint(); }, idle * 2 / 3));
+    G.timers.push(setTimeout(() => { if (alive(tok) && G.phase === 'race') nobody(tok); }, idle));
   }
   function hint() {
     S.say('t:hint'); mon.hop(1);
@@ -599,17 +616,29 @@
     $('#resTitle').textContent = win < 0 ? T[2] : T[win];
     $('#btnAgain span').textContent = 'Play again';
     $('#btnHome2 span').textContent = 'Home';
+    // the level for the next game (phonics-kit "공통 규칙: 레벨"): the two players together won 7+ cards -> one up; 4 or fewer
+    // -> a poor game, the second poor game in a row -> one down; else the same again. "LEVEL UP!" with the new number
+    const was = G.lv;
+    if (a + b >= GOOD) { LV.poor = 0; LV.level = Math.min(LEVELS.length, was + 1); }
+    else if (a + b <= POOR) { if (++LV.poor >= 2) { LV.poor = 0; LV.level = Math.max(1, was - 1); } }
+    else LV.poor = 0;
+    save('ecLevel', LV);
+    const up = LV.level > was;
+    $('#resLevel b').textContent = LV.level;
+    $('#result').classList.toggle('up', up);
+    if (up) setTimeout(() => { if (alive(tok)) S.sfx('sparkle'); }, 1500);   // as the LEVEL UP! badge pops in
     $('#result').classList.add('show');
     // the winner's crown in 3D (user: "결과화면에 왕관도 3d 형태로"); the flat CSS crown only when WebGL can't
     document.querySelectorAll('.res-p').forEach((e, i) => e.classList.toggle('c3d', i === win && !!window.Crown3D && Crown3D.show(e)));
     if (win < 0 && window.Crown3D) Crown3D.hide();
     S.sfx('win'); FX.confetti(110); FX.fireworks(7, 3600);
     mon.cheer(); mon.lookAt(win < 0 ? null : win ? 2150 : 250, 300);
-    // the shared record of the phonics games (phonics-kit F1, records only — no level select): cards per player,
+    // the shared record of the phonics games (phonics-kit F1; no level select): the level played, cards per player,
     // winner (1 / 2, 0 = a tie), words said right, words jumped, cards given back for a wrong word, play time from the first deal
     try {
-      if (window.PhonicsProgress) PhonicsProgress.played('eye-catch', { p1: a, p2: b, stars1: stars[0], stars2: stars[1], cards: a + b, winner: win + 1, rounds: G.rounds,
+      if (window.PhonicsProgress) PhonicsProgress.played('eye-catch', { level: was, p1: a, p2: b, stars1: stars[0], stars2: stars[1], cards: a + b, winner: win + 1, rounds: G.rounds,
         words: G.said, jumps: G.jumps, lost: G.lost[0] + G.lost[1], time: G.t0 ? Math.round((performance.now() - G.t0) / 100) / 10 : null });
+      if (window.PhonicsProgress && LV.level !== was) PhonicsProgress.setLevel('eye-catch', LV.level);   // the next START plays it
     } catch (e) { console.warn('progress', e); }
     await wait(600); if (!alive(tok)) return;
     await S.say(win < 0 ? 't:draw' : win ? 't:win2' : 't:win1'); if (!alive(tok)) return;
@@ -634,6 +663,16 @@
     save('ecWallet', wallet);
   }
   const left = () => wallet.earned - wallet.spent;
+  // the level, one for the device (both players share it): 'ecLevel' { level 1–6, poor: poor games in a row }; a device
+  // without it continues from the shared record's level (PhonicsProgress), else level 1
+  const LV = { level: 1, poor: 0 };
+  {
+    const v = load('ecLevel', null);
+    let n = v && +v.level;
+    if (!n) try { n = window.PhonicsProgress && PhonicsProgress.get('eye-catch').level; } catch (e) { n = 0; }
+    LV.level = Math.min(LEVELS.length, Math.max(1, Math.round(+n || 1)));
+    LV.poor = v && +v.poor > 0 ? Math.min(1, +v.poor) : 0;
+  }
   function earnCard() { wallet.earned++; save('ecWallet', wallet); }
   const charsEl = $('#chars'), walletEl = $('#wallet'), charEls = [...document.querySelectorAll('#charGrid .ch')];
   const SRC = Object.fromEntries(charEls.map(b => [b.dataset.n, b.querySelector('img').getAttribute('src')]));
@@ -653,6 +692,7 @@
   // the title in the logo's candy colours, letter by letter
   const TITLE_C = [['--p1', '--p1-deep'], ['--p2', '--p2-deep'], ['--orange', '--orange-deep'], ['--mic-on', '--mic-on-deep']];
   $('#charsTitle').innerHTML = [...'CHARACTERS'].map((ch, i) => `<span style="--c:var(${TITLE_C[i % 4][0]});--cd:var(${TITLE_C[i % 4][1]})">${ch}</span>`).join('');
+  $('#resLevel .lu').innerHTML = [...'LEVEL UP!'].map((ch, i) => `<span style="--c:var(${TITLE_C[i % 4][0]});--cd:var(${TITLE_C[i % 4][1]})">${ch}</span>`).join('');
   let tab = 0, asking = 0;                         // the player choosing (0 / 1); the locked face whose price is lit
   function renderChars() {
     walletEl.querySelector('b').textContent = left();
@@ -734,6 +774,7 @@
   if (Q.has('tap')) Mic.state = 'none';
   PhonicsAPI.init().then(showApi);
   window.__ec = { G, buzz, startGame, showTitle, fake, mon, M3, wait, held, judgeSpeech, jump: () => jumpNow && jumpNow(),
-    chars: () => ({ wallet: left(), earned: wallet.earned, spent: wallet.spent, owned: [...owned], pick: { ...pick } }), openChars, closeChars };
+    chars: () => ({ wallet: left(), earned: wallet.earned, spent: wallet.spent, owned: [...owned], pick: { ...pick } }), openChars, closeChars,
+    level: () => ({ ...LV }), LEVELS };
   window.__ready = true;
 })();
