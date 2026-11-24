@@ -772,6 +772,11 @@
   showTitle();
   requestAnimationFrame(tick);
   if (Q.has('tap')) Mic.state = 'none';
+  // a looser pass for this game (user 2026-11-24: "아이캐치 발화 인식이 잘안돼" → "통과률을 좀 낮추는게 좋겠어"): 'ok' up to 0.65
+  // difference per sound (kit default 0.5). Measured on the 18 words' saved readings (phonics-kit qa_judge + qa_sweep):
+  // child voice 78 → 83 %, Korean accent 82 → 86 %, adult 94 → 97 %; another card word passing 3.4 → 5.7 %. Here only the
+  // pictures on the two cards are rivals, and a word heard (almost) exactly as another picture still blocks the 'ok'.
+  PhonicsAPI.okMax = 0.65;
   PhonicsAPI.init().then(showApi);
   window.__ec = { G, buzz, startGame, showTitle, fake, mon, M3, wait, held, judgeSpeech, jump: () => jumpNow && jumpNow(),
     chars: () => ({ wallet: left(), earned: wallet.earned, spent: wallet.spent, owned: [...owned], pick: { ...pick } }), openChars, closeChars,
