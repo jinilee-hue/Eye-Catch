@@ -571,3 +571,57 @@ img { -webkit-user-drag: none; user-select: none; }
 .sys .sys-btn.lang .flag { width: calc(.84 * var(--hb)); height: calc(.84 * var(--hb)); }
 .sys .sys-btn.lang .flag svg { width: 86%; height: 86%; box-shadow: none; }
 .sys .sys-btn.lang .flag:not(.on) svg { transform: scale(.68); opacity: .6; filter: grayscale(.3); }
+
+/* ── phones held sideways (2026-11-26, "모바일 용을 고친다고 태블릿이나 pc버전이 깨지면 안돼"): only a short screen with a finger
+   pointer gets these rules — tablets (≥ 768 tall) and PCs (mouse) never match, so they stay exactly as above. A phone
+   shows the stage at ~0.19, so the top buttons came out 26 px, SKIP 19 px, JUMP 24 px and the names 9 px. Sizes here are
+   SCREEN px (÷ --k): 44 px buttons, 12 px+ words; same parts, same colours, same places — just bigger, re-spaced to fit. ── */
+:root { --rotate-bg: rgba(70, 40, 92, 0.92); }
+@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+  /* the gloves' cuffs run off the screen's bottom edge on purpose: clip them here so the page itself never scrolls */
+  body { position: fixed; inset: 0; overscroll-behavior: none; }
+  /* top corners: 44 px buttons, 8 px from the top, 10 px from the sides */
+  .sys { --hb: calc(44px / var(--k)); right: calc(10px / var(--k) - var(--ex)); top: calc(8px / var(--k) - var(--ey)); }
+  .sys.sys-left { right: auto; left: calc(10px / var(--k) - var(--ex)); }
+  .chars-close { width: calc(44px / var(--k)); height: calc(44px / var(--k)); }
+  /* SKIP: 44 px high, 19 px word, still in the gap under the logo */
+  .skip-btn { height: calc(44px / var(--k)); padding: 0 calc(18px / var(--k)); font-size: calc(19px / var(--k)); }
+  /* LEVEL n under the logo: 12 px label, 17 px number */
+  .lv-tag { height: calc(24px / var(--k)); padding: calc(2px / var(--k)) calc(10px / var(--k)) 0; gap: calc(4px / var(--k)); border-radius: calc(12px / var(--k)); }
+  .lv-tag span { font-size: calc(12px / var(--k)); }
+  .lv-tag b { font-size: calc(17px / var(--k)); }
+  /* the pads: the player's name 12.5 px */
+  .plate .pname { font-size: calc(12.5px / var(--k)); }
+  /* JUMP in the say turn: 44 px, its centre where it was across, 10 px up from the screen's bottom; the guide's glove follows */
+  .jump-btn { width: calc(44px / var(--k)); height: calc(44px / var(--k)); top: calc(1792px + var(--ey) - 54px / var(--k)); }
+  .jump-btn.p1 { left: calc(880px - 22px / var(--k)); }
+  .jump-btn.p2 { left: calc(1520px - 22px / var(--k)); }
+  .jump-hand { top: calc(1792px + var(--ey) - 32px / var(--k) + 7px - var(--ty, 10px)); }
+  /* the word card: a little bigger, its speaker 42 px */
+  .word-card { --cw: calc(118px / var(--k)); }
+  .word-card .snd { width: calc(42px / var(--k)); height: calc(42px / var(--k)); bottom: calc(-21px / var(--k)); }
+  /* result: Play again / Home 44 px on one line each (the card widens to hold them), LEVEL on the medal 12 px */
+  .res-card { width: auto; min-width: 1300px; }
+  .pill { white-space: nowrap; height: calc(44px / var(--k)); gap: calc(6px / var(--k)); padding: calc(2px / var(--k)) calc(17px / var(--k)) 0 calc(14px / var(--k)); border-radius: calc(22px / var(--k)); font-size: calc(19px / var(--k)); }
+  .pill svg { width: calc(20px / var(--k)); height: calc(20px / var(--k)); }
+  .res-level .medal { width: calc(46px / var(--k)); height: calc(46px / var(--k)); }
+  .res-level .medal small { font-size: calc(12px / var(--k)); }
+  .res-level .medal b { font-size: calc(20px / var(--k)); }
+  /* CHARACTERS: the player tabs 42 px high, 14 px names; the prices 13 px */
+  .ptab { height: calc(42px / var(--k)); gap: calc(5px / var(--k)); padding: 0 calc(14px / var(--k)) 0 calc(4px / var(--k)); border-radius: calc(21px / var(--k)); font-size: calc(14px / var(--k)); }
+  .ptab .face { width: calc(34px / var(--k)); height: calc(34px / var(--k)); }
+  .ch .who, .ch .lock { width: calc(22px / var(--k)); height: calc(22px / var(--k)); }
+  .ch .who { font-size: calc(13px / var(--k)); }
+  .ch .price b { font-size: calc(13px / var(--k)); }
+}
+
+/* phones held upright: a full-screen card asks to turn the phone (the game is made for the wide screen) */
+.rotate-hint { display: none; }
+@media (orientation: portrait) and (max-width: 500px) and (pointer: coarse) {
+  .rotate-hint { position: fixed; inset: 0; z-index: 2147483647; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+    padding: 24px; color: var(--card-face); background: var(--rotate-bg); text-align: center; touch-action: none; }
+  .rotate-hint svg { width: 132px; height: 132px; overflow: visible; filter: drop-shadow(0 3px 6px var(--shade)); }
+  .rotate-hint .rh-dev { transform-box: view-box; transform-origin: 50% 50%; animation: rhTurn 2s ease-in-out infinite; }
+  .rotate-hint p { margin: 0; font: 800 22px / 1.2 var(--font); letter-spacing: .02em; }
+}
+@keyframes rhTurn { 0%, 15% { transform: rotate(0); } 55%, 85% { transform: rotate(90deg); } 100% { transform: rotate(0); } }
