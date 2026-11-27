@@ -580,9 +580,11 @@ img { -webkit-user-drag: none; user-select: none; }
 @media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
   /* the gloves' cuffs run off the screen's bottom edge on purpose: clip them here so the page itself never scrolls */
   body { position: fixed; inset: 0; overscroll-behavior: none; }
-  /* top corners: 44 px buttons, 8 px from the top, 10 px from the sides */
-  .sys { --hb: calc(44px / var(--k)); right: calc(10px / var(--k) - var(--ex)); top: calc(8px / var(--k) - var(--ey)); }
-  .sys.sys-left { right: auto; left: calc(10px / var(--k) - var(--ex)); }
+  /* edges (user 2026-11-26: "너무 좌우 상하 여백없이 붙어있는건 아닌지"): every button keeps 12 px from the top and the sides and
+     14 px from the bottom; buttons side by side keep 8 px apart */
+  /* top corners: 44 px buttons, 8 px apart, 12 px from the top and the sides */
+  .sys { --hb: calc(44px / var(--k)); right: calc(12px / var(--k) - var(--ex)); top: calc(12px / var(--k) - var(--ey)); gap: calc(8px / var(--k)); }
+  .sys.sys-left { right: auto; left: calc(12px / var(--k) - var(--ex)); }
   .chars-close { width: calc(44px / var(--k)); height: calc(44px / var(--k)); }
   /* SKIP: 44 px high, 19 px word, still in the gap under the logo */
   .skip-btn { height: calc(44px / var(--k)); padding: 0 calc(18px / var(--k)); font-size: calc(19px / var(--k)); }
@@ -592,24 +594,42 @@ img { -webkit-user-drag: none; user-select: none; }
   .lv-tag b { font-size: calc(17px / var(--k)); }
   /* the pads: the player's name 12.5 px */
   .plate .pname { font-size: calc(12.5px / var(--k)); }
-  /* JUMP in the say turn: 44 px, its centre where it was across, 10 px up from the screen's bottom; the guide's glove follows */
-  .jump-btn { width: calc(44px / var(--k)); height: calc(44px / var(--k)); top: calc(1792px + var(--ey) - 54px / var(--k)); }
-  .jump-btn.p1 { left: calc(880px - 22px / var(--k)); }
-  .jump-btn.p2 { left: calc(1520px - 22px / var(--k)); }
-  .jump-hand { top: calc(1792px + var(--ey) - 32px / var(--k) + 7px - var(--ty, 10px)); }
-  /* the word card: a little bigger, its speaker 42 px */
-  .word-card { --cw: calc(118px / var(--k)); }
-  .word-card .snd { width: calc(42px / var(--k)); height: calc(42px / var(--k)); bottom: calc(-21px / var(--k)); }
-  /* result: Play again / Home 44 px on one line each (the card widens to hold them), LEVEL on the medal 12 px */
+  /* each player's pad (score capsule + face button) grows as one, from its screen corner, so the button is 88 px
+     (5-year-old thumbs, ~1.5 cm — round 2), 16 px from the side and 14 px from the bottom; its insides (face, mic badge,
+     glove) keep their shares */
+  .buzzer, .plate { scale: calc(.28025 / var(--k)); }   /* 88 px ÷ (314 stage px × k) */
+  .buzzer.p1 { transform-origin: -58px 364px; }
+  .buzzer.p2 { transform-origin: 372px 364px; }
+  .plate.p1 { transform-origin: -215px 302px; }
+  .plate.p2 { transform-origin: 775px 302px; }
+  /* JUMP in the say turn: 64 px, its centre where it was across, 14 px up from the screen's bottom; the guide's glove follows */
+  .jump-btn { width: calc(64px / var(--k)); height: calc(64px / var(--k)); top: calc(1792px + var(--ey) - 78px / var(--k)); }
+  .jump-btn.p1 { left: calc(880px - 32px / var(--k)); }
+  .jump-btn.p2 { left: calc(1520px - 32px / var(--k)); }
+  .jump-hand { top: calc(1792px + var(--ey) - 46px / var(--k) + 7px - var(--ty, 10px)); }
+  /* the word card (round 3, "모바일에서 게임하기 편한 ui 구조로"): play waits while it shows (game.js win / nobody: phase 'reveal',
+     the buttons don't race), so on a phone it is a big card in the middle of the screen over a dimmed table — the picture
+     ~113 px, the word up to 32 px, the speaker 64 px hanging under it; LEVEL n steps aside meanwhile */
+  .wordpop { top: calc(896px + var(--ey) - 16px / var(--k)); }
+  .wordpop::before { content: ''; position: absolute; left: 50%; top: 50%; width: 30000px; height: 30000px; translate: -50% -50%; z-index: -1;
+    background: var(--dim); pointer-events: none; }
+  .word-card { --cw: calc(170px / var(--k)); padding-bottom: calc(38px / var(--k)); }
+  .word-card .snd { width: calc(64px / var(--k)); height: calc(64px / var(--k)); bottom: calc(-32px / var(--k)); }
+  #stage:has(.wordpop.show) .lv-tag { opacity: 0; }
+  /* result: Play again / Home 64 px high, 160 px+ wide, one line each (the card widens to hold them), LEVEL on the medal 12 px */
   .res-card { width: auto; min-width: 1300px; }
-  .pill { white-space: nowrap; height: calc(44px / var(--k)); gap: calc(6px / var(--k)); padding: calc(2px / var(--k)) calc(17px / var(--k)) 0 calc(14px / var(--k)); border-radius: calc(22px / var(--k)); font-size: calc(19px / var(--k)); }
-  .pill svg { width: calc(20px / var(--k)); height: calc(20px / var(--k)); }
+  .pill { white-space: nowrap; justify-content: center; min-width: calc(160px / var(--k)); height: calc(64px / var(--k)); gap: calc(8px / var(--k));
+    padding: calc(3px / var(--k)) calc(20px / var(--k)) 0 calc(16px / var(--k)); border-radius: calc(32px / var(--k)); font-size: calc(26px / var(--k)); }
+  .pill svg { width: calc(28px / var(--k)); height: calc(28px / var(--k)); }
+  /* START 64 px high (183 px wide), its centre where it was */
+  .start { width: calc(183px / var(--k)); height: calc(64px / var(--k)); left: calc(1200px - 91.5px / var(--k)); top: calc(1542px - 32px / var(--k)); border-radius: calc(32px / var(--k)); }
   .res-level .medal { width: calc(46px / var(--k)); height: calc(46px / var(--k)); }
   .res-level .medal small { font-size: calc(12px / var(--k)); }
   .res-level .medal b { font-size: calc(20px / var(--k)); }
   /* CHARACTERS: the player tabs 42 px high, 14 px names; the prices 13 px */
   .ptab { height: calc(42px / var(--k)); gap: calc(5px / var(--k)); padding: 0 calc(14px / var(--k)) 0 calc(4px / var(--k)); border-radius: calc(21px / var(--k)); font-size: calc(14px / var(--k)); }
   .ptab .face { width: calc(34px / var(--k)); height: calc(34px / var(--k)); }
+  .chars-tabs { gap: calc(14px / var(--k)); }   /* 8 px+ apart with the chosen tab drawn 6 % bigger */
   .ch .who, .ch .lock { width: calc(22px / var(--k)); height: calc(22px / var(--k)); }
   .ch .who { font-size: calc(13px / var(--k)); }
   .ch .price b { font-size: calc(13px / var(--k)); }
